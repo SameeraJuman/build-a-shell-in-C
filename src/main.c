@@ -16,13 +16,15 @@ int main(int argc, char *argv[]) {
     
     // printf("variable command: %s", command);      // DEBUG
 
-    // exit the shell (exit cmd)
-    if(strcmp(command, "exit") == 0) {
+    
+    if(strcmp(command, "exit") == 0) {                  // exit the shell (exit cmd)
       break;
+    } else if(strncmp(command, "echo ", 5) == 0) {     // print the text after 'echo' (echo cmd) 
+      char* after_echo = command + 5;
+      printf("%s\n", after_echo);
+    } else {
+    printf("%s: command not found\n", command);       // print error msg 
     }
-
-    // print error msg 
-    printf("%s: command not found\n", command);
 
   }
   
