@@ -16,8 +16,14 @@ int main(int argc, char *argv[]) {
     
     // printf("variable command: %s", command);      // DEBUG
 
+    // exit the shell (exit cmd)
+    if(strcmp(command, "exit") == 0) {
+      break;
+    }
+
     // print error msg 
     printf("%s: command not found\n", command);
+
   }
   
   return 0;
