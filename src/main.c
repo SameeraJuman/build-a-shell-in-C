@@ -70,19 +70,27 @@ int main(int argc, char *argv[]) {
           printf("%s: not found\n", after_type);
         }
       
-    } else {                              // launching external programs
+    } else if (strcmp(command, "pwd") == 0) {          // pwd command
+        char my_pwd[1024];
+        if (getcwd(my_pwd, sizeof(my_pwd)) == NULL) {
+          perror("getcwd error");
+          exit(1);
+        } 
+        printf("%s\n", my_pwd);
+    }
+    else {                              // launching external programs
         // searching for executables
         char launch_parse[100];
         char* args[100];
-        int arg_count = 0;
+        int arg_index = 0;
         strcpy(launch_parse, command);
         char* cli_line = strtok(launch_parse, " ");
         while (cli_line != NULL) {
-          args[arg_count]= cli_line;
-          arg_count++;
+          args[arg_index]= cli_line;
+          arg_index++;
           cli_line = strtok(NULL, " ");
         }
-        args[arg_count] = NULL;
+        args[arg_index] = NULL;     // setting the last item to null
 
         char filename[100];
         char p[1000];
@@ -113,6 +121,7 @@ int main(int argc, char *argv[]) {
               waitpid(my_pid, NULL, 0);
               // printf("The child process ending----------\n");
             }
+
         } else {
         printf("%s: command not found\n", command);       // print error msg 
       }
