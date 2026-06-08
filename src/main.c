@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
@@ -8,6 +10,8 @@ int main(int argc, char *argv[]) {
   setbuf(stdout, NULL);
 
   while(1) {
+    int foundB = 0;
+    int foundE = 0;
     printf("$ ");     // display the prompt $
 
     // read user input
@@ -29,8 +33,6 @@ int main(int argc, char *argv[]) {
         char* builtin_cmd[] = {"echo", "exit", "type"};
         int i;
         int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
-        int foundB = 0;
-        int foundE = 0;
         char* after_type = command + 5;
         for (i = 0; i < length; i++) {
           if (strcmp(after_type, builtin_cmd[i]) == 0) {
@@ -68,8 +70,52 @@ int main(int argc, char *argv[]) {
           printf("%s: not found\n", after_type);
         }
       
-    } else {
+    } else {                              // launching external programs
+        // searching for executables
+        char launch_parse[100];
+        char* args[100];
+        int arg_count = 0;
+        strcpy(launch_parse, command);
+        char* cli_line = strtok(launch_parse, " ");
+        while (cli_line != NULL) {
+          args[arg_count]= cli_line;
+          arg_count++;
+          cli_line = strtok(NULL, " ");
+        }
+        args[arg_count] = NULL;
+
+        char filename[100];
+        char p[1000];
+        strcpy(p, getenv("PATH"));
+        char* token = strtok(p, ":");
+        while (token != NULL) {
+          // check if file with the command name exists
+          strcpy(filename, token);
+          strcat(filename, "/");
+          strcat(filename, args[0]);
+          if (access(filename, F_OK) == 0) {
+            // check if file has execute permissions
+            if (access(filename, X_OK) == 0) {
+              foundE = 1;
+              printf("%s is %s\n", args[0], filename);
+              break;
+            }
+            // if file exists BUT lacks execute permissions, continue
+          } 
+          token = strtok(NULL, ":");
+        }
+        if (foundE) {
+          // 1. fork  2. execvp  3. wait for child process  4. parse input w strtok
+          pid_t my_pid = fork();
+          if (my_pid == 0) {        // child
+            execvp(filename, args);
+          } if (my_pid != 0) {      // main/parent
+              waitpid(my_pid, NULL, 0);
+              printf("The child process ending----------\n");
+            }
+        } else {
         printf("%s: command not found\n", command);       // print error msg 
+      }
     }
 
   }
