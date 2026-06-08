@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
             execvp(filename, args);
           } if (my_pid != 0) {      // main/parent
               waitpid(my_pid, NULL, 0);
-              printf("The child process ending----------\n");
+              // printf("The child process ending----------\n");
             }
         } else {
         printf("%s: command not found\n", command);       // print error msg 
