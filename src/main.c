@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         printf("%s\n", after_echo);
 
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
-        char* builtin_cmd[] = {"echo", "exit", "type"};
+        char* builtin_cmd[] = {"echo", "exit", "type", "pwd"};
         int i;
         int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
         char* after_type = command + 5;
