@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
             // check if file has execute permissions
             if (access(filename, X_OK) == 0) {
               foundE = 1;
-              printf("%s is %s\n", args[0], filename);
+              // printf("%s is %s\n", args[0], filename);
               break;
             }
             // if file exists BUT lacks execute permissions, continue
