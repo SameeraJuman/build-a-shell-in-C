@@ -83,19 +83,15 @@ int main(int argc, char *argv[]) {
         char path[100];
         char* after_cd = command + 3;
         strcpy(path, after_cd);
-        if (access(path, F_OK) == -1) {
+        if (strcmp(after_cd, "~") == 0) {           // cd ~
+          char* home_path = getenv("HOME");
+          chdir(home_path);
+        } else if (access(path, F_OK) == -1) {
           printf("cd: %s: No such file or directory\n", path);
         } else {
             chdir(path);
         }
-        // cd ~
-        if (strcmp(after_cd, "~")) {
-          char* home_path = getenv("HOME");
-          chdir(home_path);
-        } else {
-          perror("cd ~ error");
-        }
-
+        
     } else {                              // launching external programs
         // searching for executables
         char launch_parse[100];
