@@ -80,10 +80,9 @@ int main(int argc, char *argv[]) {
 
     } else if (strncmp(command, "cd ", 3) == 0) {         // cd cmd
         // absolute paths: dir(noexist) -> error msg, dir(true) -> change
-        char* path;
+        char path[100];
         char* after_cd = command + 3;
         strcpy(path, after_cd);
-        printf("this is path: %s", path);
         if (access(path, F_OK) == -1) {
           printf("cd: %s: No such file or directory\n", path);
         } else {
