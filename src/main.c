@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         printf("%s\n", after_echo);
 
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
-        char* builtin_cmd[] = {"echo", "exit", "type", "pwd"};
+        char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
         int i;
         int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
         char* after_type = command + 5;
@@ -70,15 +70,27 @@ int main(int argc, char *argv[]) {
           printf("%s: not found\n", after_type);
         }
       
-    } else if (strcmp(command, "pwd") == 0) {          // pwd command
+    } else if (strcmp(command, "pwd") == 0) {          // pwd cmd
         char my_pwd[1024];
         if (getcwd(my_pwd, sizeof(my_pwd)) == NULL) {
           perror("getcwd error");
           exit(1);
         } 
         printf("%s\n", my_pwd);
-    }
-    else {                              // launching external programs
+
+    } else if (strncmp(command, "cd ", 3) == 0) {         // cd cmd
+        // absolute paths: dir(noexist) -> error msg, dir(true) -> change
+        char* path;
+        char* after_cd = command + 3;
+        strcpy(path, after_cd);
+        printf("this is path: %s", path);
+        if (access(path, F_OK) == -1) {
+          printf("cd: %s: No such file or directory\n", path);
+        } else {
+            chdir(path);
+        }
+
+    } else {                              // launching external programs
         // searching for executables
         char launch_parse[100];
         char* args[100];
