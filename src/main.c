@@ -88,6 +88,13 @@ int main(int argc, char *argv[]) {
         } else {
             chdir(path);
         }
+        // cd ~
+        if (strcmp(after_cd, "~")) {
+          char* home_path = getenv("HOME");
+          chdir(home_path);
+        } else {
+          perror("cd ~ error");
+        }
 
     } else {                              // launching external programs
         // searching for executables
