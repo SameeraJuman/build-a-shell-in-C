@@ -21,13 +21,21 @@ int main(int argc, char *argv[]) {
     
     // printf("variable command: %s", command);      // DEBUG
 
-    
-    if(strcmp(command, "exit") == 0) {                  // exit the shell (exit cmd)
+    if(strcmp(command, "exit") == 0) {                  // exit cmd
       break;
 
-    } else if(strncmp(command, "echo ", 5) == 0) {     // print the text after 'echo' (echo cmd) 
+    } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
         char* after_echo = command + 5;
-        printf("%s\n", after_echo);
+        if (strchr(after_echo, '\'')) {
+          char* sq_tok = strtok(after_echo, "'");
+          while (sq_tok != NULL) {
+            printf("%s\n", sq_tok);
+            sq_tok = strtok(NULL, "'");
+          }
+        } else {
+            printf("%s\n", after_echo);
+        }
+        
 
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
@@ -79,14 +87,13 @@ int main(int argc, char *argv[]) {
         printf("%s\n", my_pwd);
 
     } else if (strncmp(command, "cd ", 3) == 0) {         // cd cmd
-        // absolute paths: dir(noexist) -> error msg, dir(true) -> change
         char path[100];
         char* after_cd = command + 3;
         strcpy(path, after_cd);
         if (strcmp(after_cd, "~") == 0) {           // cd ~
           char* home_path = getenv("HOME");
           chdir(home_path);
-        } else if (access(path, F_OK) == -1) {
+        } else if (access(path, F_OK) == -1) {        // absolute paths: dir(true) -> change
           printf("cd: %s: No such file or directory\n", path);
         } else {
             chdir(path);
