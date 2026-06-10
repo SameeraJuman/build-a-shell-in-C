@@ -183,7 +183,7 @@ void quoteEcho(char* str) {
       } else {
         in_s_quote = true;     // open
       }
-    } else if (str[i] == '\"') {  
+    } else if (str[i] == '\"') {  // double quotes
       if (in_d_quote) {
         in_d_quote = false;     // close
       } else {
@@ -194,7 +194,7 @@ void quoteEcho(char* str) {
         j++;
         last_char_not_space = true;
     } else {                        // outside quotes
-        if (str[i] == ' ' || str[i] == '\"') {
+        if (str[i] == ' ') {
           if (last_char_not_space) {
             str[j] = str[i];
             j++;
