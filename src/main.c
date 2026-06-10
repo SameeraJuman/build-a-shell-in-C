@@ -173,21 +173,28 @@ int main(int argc, char *argv[]) {
 void quoteEcho(char* str) {
   int len = strlen(str);
   int j = 0;
-  bool in_quote = false;
+  bool in_s_quote = false;
+  bool in_d_quote = false;
   bool last_char_not_space = false;      // was last char a space or letter
   for(int i = 0; i < len; i++) {
     if (str[i] == '\'') {  
-      if (in_quote) {
-        in_quote = false;     // close
+      if (in_s_quote) {
+        in_s_quote = false;     // close
       } else {
-        in_quote = true;     // open
+        in_s_quote = true;     // open
       }
-    } else if (in_quote) {
+    } else if (str[i] == '\"') {  
+      if (in_d_quote) {
+        in_d_quote = false;     // close
+      } else {
+        in_d_quote = true;     // open
+      }
+    } else if (in_s_quote || in_d_quote) {
         str[j] = str[i];
         j++;
         last_char_not_space = true;
     } else {                        // outside quotes
-        if (str[i] == ' ') {
+        if (str[i] == ' ' || str[i] == '\"') {
           if (last_char_not_space) {
             str[j] = str[i];
             j++;
