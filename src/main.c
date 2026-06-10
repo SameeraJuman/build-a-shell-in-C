@@ -178,7 +178,6 @@ int main(int argc, char *argv[]) {
 }
 
 void quoteEcho(char* str) {
-  printf("DEBUG: [%s]\n", str);
   int len = strlen(str);
   int j = 0;
   bool in_s_quote = false;
