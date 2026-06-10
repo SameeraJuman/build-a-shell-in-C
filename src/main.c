@@ -152,7 +152,7 @@ void quoteEcho(char* str) {
   int len = strlen(str);
   int j = 0;
   bool in_quote = false;
-  bool last_char_not_space = true;
+  bool last_char_not_space = false;
   for(int i = 0; i < len; i++) {
     if (str[i] == '\'') {  
       if (in_quote) {
