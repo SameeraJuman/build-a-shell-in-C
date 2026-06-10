@@ -100,13 +100,35 @@ int main(int argc, char *argv[]) {
         char* args[100];
         int arg_index = 0;
         strcpy(launch_parse, command);
-        char* cli_line = strtok(launch_parse, " ");
-        while (cli_line != NULL) {
-          args[arg_index]= cli_line;
-          arg_index++;
-          cli_line = strtok(NULL, " ");
+        args[0] = launch_parse;
+        int len = strlen(launch_parse);
+        int j = 0;
+        bool in_quote = false;
+        for(int i = 0; i < len; i++) {
+          if (launch_parse[i] == '\'') {  
+            if (in_quote) {
+              in_quote = false;     // close
+            } else {
+              in_quote = true;     // open
+            }
+          } else if (in_quote) {
+              launch_parse[j] = launch_parse[i];
+              j++;
+            } else {                        // outside quotes
+                if (launch_parse[i] == ' ') {
+                  launch_parse[j] = '\0';
+                  j++;
+                  arg_index++;
+                  args[arg_index] = launch_parse + j;
+              } else {
+                  launch_parse[j] = launch_parse[i];
+                  j++;
+                }
+          }           
         }
-        args[arg_index] = NULL;     // setting the last item to null
+        launch_parse[j] = '\0';
+        arg_index++;
+        args[arg_index] = NULL; 
 
         char filename[100];
         char p[1000];
