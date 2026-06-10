@@ -106,8 +106,8 @@ int main(int argc, char *argv[]) {
         bool in_s_quote = false;
         bool in_d_quote = false;
         for(int i = 0; i < len; i++) {
-          if (str[i] == '\\' && !in_s_quote) {    // backslash
-            str[j] = str[i+1];
+          if (launch_parse[i] == '\\' && !in_s_quote) {    // backslash
+            launch_parse[j] = launch_parse[i+1];
             j++;
             i++;
           } else if (launch_parse[i] == '\'' && !in_d_quote) {  
