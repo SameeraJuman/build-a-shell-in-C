@@ -106,7 +106,11 @@ int main(int argc, char *argv[]) {
         bool in_s_quote = false;
         bool in_d_quote = false;
         for(int i = 0; i < len; i++) {
-          if (launch_parse[i] == '\'' && !in_d_quote) {  
+          if (str[i] == '\\' && !in_s_quote) {    // backslash
+            str[j] = str[i+1];
+            j++;
+            i++;
+          } else if (launch_parse[i] == '\'' && !in_d_quote) {  
             if (in_s_quote) {
               in_s_quote = false;     // close
             } else {
@@ -183,7 +187,6 @@ void quoteEcho(char* str) {
   bool in_s_quote = false;
   bool in_d_quote = false;
   bool last_char_not_space = false;      // pretend last char was space
-  bool in_backslash = false;
   for(int i = 0; i < len; i++) {
     if (str[i] == '\\' && !in_s_quote) {    // backslash
       str[j] = str[i+1];
