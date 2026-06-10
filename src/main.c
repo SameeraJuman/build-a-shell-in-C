@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+void quoteEcho(char* str);           // consecutive spaces
 
 int main(int argc, char *argv[]) {
   // Flush after every printf
@@ -26,17 +29,9 @@ int main(int argc, char *argv[]) {
 
     } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
         char* after_echo = command + 5;
-        if (strchr(after_echo, '\'')) {
-          char* sq_tok = strtok(after_echo, "'");
-          while (sq_tok != NULL) {
-            printf("%s\n", sq_tok);
-            sq_tok = strtok(NULL, "'");
-          }
-        } else {
-            printf("%s\n", after_echo);
-        }
+        quoteEcho(after_echo);
+        printf("%s\n", after_echo);
         
-
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
         int i;
@@ -151,4 +146,37 @@ int main(int argc, char *argv[]) {
   }
   
   return 0;
+}
+
+void quoteEcho(char* str) {
+  int len = strlen(str);
+  int j = 0;
+  bool in_quote = false;
+  bool last_char_not_space = true;
+  for(int i = 0; i < len; i++) {
+    if (str[i] == '\'') {  
+      if (in_quote) {
+        in_quote = false;
+      } else {
+        in_quote = true;
+      }
+    }
+    else if (in_quote) {
+      str[j] = str[i];
+      j++;
+    } else {
+      if (str[i] == ' ') {
+        if (last_char_not_space) {
+        str[j] = str[i];
+        j++;
+        last_char_not_space = false;
+        }
+      } else {
+        str[j] = str[i];
+        j++;
+        last_char_not_space = true;
+      }
+    }           
+  }
+  str[j] = '\0';
 }
