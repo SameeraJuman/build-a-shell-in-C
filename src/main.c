@@ -103,15 +103,22 @@ int main(int argc, char *argv[]) {
         args[0] = launch_parse;
         int len = strlen(launch_parse);
         int j = 0;
-        bool in_quote = false;
+        bool in_s_quote = false;
+        bool in_d_quote = false;
         for(int i = 0; i < len; i++) {
-          if (launch_parse[i] == '\'') {  
-            if (in_quote) {
-              in_quote = false;     // close
+          if (launch_parse[i] == '\'' && !in_d_quote) {  
+            if (in_s_quote) {
+              in_s_quote = false;     // close
             } else {
-              in_quote = true;     // open
+              in_s_quote = true;     // open
             }
-          } else if (in_quote) {
+          } else if (launch_parse[i] == '\"' && !in_s_quote) {  // double quotes
+            if (in_d_quote) {
+              in_d_quote = false;     // close
+            } else {
+              in_d_quote = true;     // open
+            } 
+          } else if (in_s_quote || in_d_quote) {
               launch_parse[j] = launch_parse[i];
               j++;
             } else {                        // outside quotes
