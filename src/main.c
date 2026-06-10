@@ -177,13 +177,13 @@ void quoteEcho(char* str) {
   bool in_d_quote = false;
   bool last_char_not_space = false;      // was last char a space or letter
   for(int i = 0; i < len; i++) {
-    if (str[i] == '\'') {  
+    if (str[i] == '\'' && !in_d_quote) {  
       if (in_s_quote) {
         in_s_quote = false;     // close
       } else {
         in_s_quote = true;     // open
       }
-    } else if (str[i] == '\"') {  // double quotes
+    } else if (str[i] == '\"' && !in_s_quote) {  // double quotes
       if (in_d_quote) {
         in_d_quote = false;     // close
       } else {
