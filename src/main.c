@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
             }
 
         } else {
-        printf("%s: command not found\n", command);       // print error msg 
+            printf("%s: command not found\n", command);       // print error msg 
       }
     }
 
@@ -152,30 +152,29 @@ void quoteEcho(char* str) {
   int len = strlen(str);
   int j = 0;
   bool in_quote = false;
-  bool last_char_not_space = false;
+  bool last_char_not_space = false;      // was last char a space or letter
   for(int i = 0; i < len; i++) {
     if (str[i] == '\'') {  
       if (in_quote) {
-        in_quote = false;
+        in_quote = false;     // close
       } else {
-        in_quote = true;
+        in_quote = true;     // open
       }
-    }
-    else if (in_quote) {
-      str[j] = str[i];
-      j++;
-    } else {
-      if (str[i] == ' ') {
-        if (last_char_not_space) {
+    } else if (in_quote) {
         str[j] = str[i];
         j++;
-        last_char_not_space = false;
+    } else {                        // outside quotes
+        if (str[i] == ' ') {
+          if (last_char_not_space) {
+            str[j] = str[i];
+            j++;
+            last_char_not_space = false;
+          }
+      } else {
+          str[j] = str[i];
+          j++;
+          last_char_not_space = true;
         }
-      } else {
-        str[j] = str[i];
-        j++;
-        last_char_not_space = true;
-      }
     }           
   }
   str[j] = '\0';
