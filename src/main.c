@@ -178,13 +178,19 @@ int main(int argc, char *argv[]) {
 }
 
 void quoteEcho(char* str) {
+  printf("DEBUG: [%s]\n", str);
   int len = strlen(str);
   int j = 0;
   bool in_s_quote = false;
   bool in_d_quote = false;
-  bool last_char_not_space = false;      // was last char a space or letter
+  bool last_char_not_space = false;      // pretend last char was space
+  bool in_backslash = false;
   for(int i = 0; i < len; i++) {
-    if (str[i] == '\'' && !in_d_quote) {  
+    if (str[i] == '\\' && !in_s_quote) {    // backslash
+      str[j] = str[i+1];
+      j++;
+      i++;
+    } else if (str[i] == '\'' && !in_d_quote) {  
       if (in_s_quote) {
         in_s_quote = false;     // close
       } else {
@@ -202,12 +208,12 @@ void quoteEcho(char* str) {
         last_char_not_space = true;
     } else {                        // outside quotes
         if (str[i] == ' ') {
-          if (last_char_not_space) {
+          if (last_char_not_space) {    // copy 1st space, ignore the rest
             str[j] = str[i];
             j++;
             last_char_not_space = false;
           }
-      } else {
+      } else {                // copy e.g. letters 
           str[j] = str[i];
           j++;
           last_char_not_space = true;
