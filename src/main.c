@@ -163,6 +163,7 @@ void quoteEcho(char* str) {
     } else if (in_quote) {
         str[j] = str[i];
         j++;
+        last_char_not_space = true;
     } else {                        // outside quotes
         if (str[i] == ' ') {
           if (last_char_not_space) {
