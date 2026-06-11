@@ -36,12 +36,13 @@ int main(int argc, char *argv[]) {
     } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
         // char* after_echo = command + 5;
         int arg_index = 0;
+        int fd_num = 0;
         parseCommand(command, launch_parse, args, &arg_index);
-        char* redirect_file = findRedirect(args);
+        char* redirect_file = findRedirect(args, &fd_num);
         if (redirect_file != NULL) {
           int saved = dup(1);
           int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  
-          int fd2 = dup2(fd, 1);
+          int fd2 = dup2(fd, &fd_num);
           close(fd);
           for (int v = 1; args[v] != NULL; v++) {
             if (strlen(args[v]) == 0) continue; 
@@ -51,8 +52,10 @@ int main(int argc, char *argv[]) {
             printf("%s", args[v]);
           }
           printf("\n");
+
           dup2(saved, 1);
           close(saved);
+
         } else {
             for (int v = 1; args[v] != NULL; v++) {
               if (strlen(args[v]) == 0) continue; 
@@ -115,8 +118,9 @@ int main(int argc, char *argv[]) {
     } else {                              // launching external programs
         // searching for executables
         int arg_index = 0;
+        int fd_num = 0;
         parseCommand(command, launch_parse, args, &arg_index);
-        char* redirect_file = findRedirect(args);
+        char* redirect_file = findRedirect(args, &fd_num);
         
         char filename[1024];          // PATH
         char p[2048];
@@ -127,13 +131,14 @@ int main(int argc, char *argv[]) {
           pid_t my_pid = fork();
           if (my_pid == 0) {        // child
             if (redirect_file != NULL) {
-              int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);  // opens and creates if doesnt exist 
+              int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);  
               if (fd == -1) {
                 return 2;
               }
-              int fd2 = dup2(fd, 1);
+              int fd2 = dup2(fd, &fd_num);    // redirect stdout
               close(fd);
             }
+            
             execvp(filename, args);
 
           } if (my_pid != 0) {      // main/parent
@@ -192,10 +197,15 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
   args[*arg_index] = NULL; 
 }   
 
-char* findRedirect(char** args) {
+char* findRedirect(char** args, int* fd_num) {
   char* redirect_file = NULL;         
   for (int k = 0; args[k] != NULL; k++) {
     if (strcmp(args[k], ">") == 0 || strcmp(args[k], "1>") == 0) {
+      *fd_num = 1;
+      redirect_file = args[k+1];
+      args[k] = NULL;
+    } else if (strcmp(args[k], "2>") == 0) {
+      *fd_num = 2;
       redirect_file = args[k+1];
       args[k] = NULL;
     }
