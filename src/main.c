@@ -120,6 +120,8 @@ int main(int argc, char *argv[]) {
         char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
+        printf("ARGS: [%s] [%s] [%s]\n", args[0], args[1], args[2]);
+fflush(stdout);
         char* redirect_file = findRedirect(args);
         
         char filename[1024];
@@ -147,6 +149,9 @@ int main(int argc, char *argv[]) {
           if (my_pid == 0) {        // child
             if (redirect_file != NULL) {
               int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  // opens and creates if doesnt exist 
+              if (fd == -1) {
+                return 2;
+              }
               int fd2 = dup2(fd, 1);
               close(fd);
             }
