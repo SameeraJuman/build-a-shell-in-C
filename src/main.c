@@ -8,7 +8,7 @@
 #include <fcntl.h>
 
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
-char* findRedirect(char** args);    // redirecting standard output
+char* findRedirect(char** args, int* fd_num);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
 
 char launch_parse[1024];
