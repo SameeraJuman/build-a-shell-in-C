@@ -8,7 +8,7 @@
 #include <fcntl.h>
 
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
-char* findRedirect(char** args, int* fd_num);    // redirecting standard output
+char* findRedirect(char** args, int* fd_num, int* append_mode);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
 
 char launch_parse[1024];
@@ -37,8 +37,15 @@ int main(int argc, char *argv[]) {
         // char* after_echo = command + 5;
         int arg_index = 0;
         int fd_num = 0;
+        int append_mode;
+        int flags;
         parseCommand(command, launch_parse, args, &arg_index);
-        char* redirect_file = findRedirect(args, &fd_num);
+        char* redirect_file = findRedirect(args, &fd_num, &append_mode);
+        if (append_mode) {
+          flags = O_WRONLY | O_CREAT | O_APPEND;
+        } else {
+          flags = O_WRONLY | O_CREAT | O_TRUNC;
+        }
         if (redirect_file != NULL) {
           int saved = dup(1);
           int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  
@@ -119,8 +126,15 @@ int main(int argc, char *argv[]) {
         // searching for executables
         int arg_index = 0;
         int fd_num = 0;
+        int append_mode;
+        int flags;
         parseCommand(command, launch_parse, args, &arg_index);
-        char* redirect_file = findRedirect(args, &fd_num);
+        char* redirect_file = findRedirect(args, &fd_num, &append_mode);
+        if (append_mode) {
+          flags = O_WRONLY | O_CREAT | O_APPEND;
+        } else {
+          flags = O_WRONLY | O_CREAT | O_TRUNC;
+        }
         
         char filename[1024];          // PATH
         char p[2048];
@@ -131,11 +145,11 @@ int main(int argc, char *argv[]) {
           pid_t my_pid = fork();
           if (my_pid == 0) {        // child
             if (redirect_file != NULL) {
-              int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);  
+              int fd = open(redirect_file, flags, 0644);  
               if (fd == -1) {
                 return 2;
               }
-              int fd2 = dup2(fd, fd_num);    // redirect stdout
+              int fd2 = dup2(fd, fd_num);    // redirect stdout or stderr
               close(fd);
             }
             
@@ -197,15 +211,21 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
   args[*arg_index] = NULL; 
 }   
 
-char* findRedirect(char** args, int* fd_num) {
+char* findRedirect(char** args, int* fd_num, int* append_mode) {
   char* redirect_file = NULL;         
   for (int k = 0; args[k] != NULL; k++) {
     if (strcmp(args[k], ">") == 0 || strcmp(args[k], "1>") == 0) {
       *fd_num = 1;
+      *append_mode = 0;
       redirect_file = args[k+1];
       args[k] = NULL;
     } else if (strcmp(args[k], "2>") == 0) {
       *fd_num = 2;
+      redirect_file = args[k+1];
+      args[k] = NULL;
+    } else if (strcmp(args[k], ">>") == 0 || strcmp(args[k], "1>>") == 0) {
+      *fd_num = 1;
+      *append_mode = 1;
       redirect_file = args[k+1];
       args[k] = NULL;
     }
