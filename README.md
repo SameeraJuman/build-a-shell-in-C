@@ -32,3 +32,12 @@ Note: This section is for stages 2 and beyond.
    `src/main.c`.
 1. Run `codecrafters submit` to submit your solution to CodeCrafters. Test
    output will be streamed to your terminal.
+
+# My Implementation
+The main code is in `src/main.c`.
+
+## Features implemented so far
+- echo with single and double quote support
+- Backslash escaping
+- cd, pwd, exit builtins
+- External program execution
