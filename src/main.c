@@ -34,7 +34,10 @@ int main(int argc, char *argv[]) {
         char* after_echo = command + 5;
         quoteEcho(after_echo);
 
-        parseCommand(char* command, char* launch_parse, char** args, int* arg_index);
+        char launch_parse[100];
+        char* args[100];
+        int arg_index = 0;
+        parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
         if (redirect_file != NULL) {
           int saved = dup(1);
@@ -113,6 +116,9 @@ int main(int argc, char *argv[]) {
         
     } else {                              // launching external programs
         // searching for executables
+        char launch_parse[100];
+        char* args[100];
+        int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
         
@@ -203,9 +209,6 @@ void quoteEcho(char* str) {
 }
 
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index) {
-  char launch_parse[100];
-  char* args[100];
-  int arg_index = 0;
   strcpy(launch_parse, command);
   args[0] = launch_parse;
   int len = strlen(launch_parse);
@@ -236,8 +239,8 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
           if (launch_parse[i] == ' ') {
             launch_parse[j] = '\0';
             j++;
-            arg_index++;
-            args[arg_index] = launch_parse + j;
+          *(arg_index)++;
+            args[*arg_index] = launch_parse + j;
         } else {
             launch_parse[j] = launch_parse[i];
             j++;
@@ -246,7 +249,7 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
   }
   launch_parse[j] = '\0';
   arg_index++;
-  args[arg_index] = NULL; 
+  args[*arg_index] = NULL; 
 }   
 
 char* findRedirect(char** args) {
