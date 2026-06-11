@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         if (redirect_file != NULL) {
           int saved = dup(1);
           int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  
-          int fd2 = dup2(fd, &fd_num);
+          int fd2 = dup2(fd, fd_num);
           close(fd);
           for (int v = 1; args[v] != NULL; v++) {
             if (strlen(args[v]) == 0) continue; 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
               if (fd == -1) {
                 return 2;
               }
-              int fd2 = dup2(fd, &fd_num);    // redirect stdout
+              int fd2 = dup2(fd, fd_num);    // redirect stdout
               close(fd);
             }
             
