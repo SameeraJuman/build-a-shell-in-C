@@ -177,7 +177,7 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
           if (launch_parse[i] == ' ') {
             launch_parse[j] = '\0';
             j++;
-          *(arg_index)++;
+          (*arg_index)++;
             args[*arg_index] = launch_parse + j;
         } else {
             launch_parse[j] = launch_parse[i];
@@ -186,7 +186,7 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
     }           
   }
   launch_parse[j] = '\0';
-  *(arg_index)++;
+  (*arg_index)++;
   args[*arg_index] = NULL; 
 }   
 
