@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-void quoteEcho(char* str);           // consecutive spaces
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
 char* findRedirect(char** args);    // redirecting standard output
+int findPath(char* cmd, char* filename, char* p);
 
 char launch_parse[1024];
 char* args[100];
@@ -34,9 +34,7 @@ int main(int argc, char *argv[]) {
       break;
 
     } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
-        char* after_echo = command + 5;
-        quoteEcho(after_echo);
-
+        // char* after_echo = command + 5;
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
@@ -45,11 +43,21 @@ int main(int argc, char *argv[]) {
           int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  
           int fd2 = dup2(fd, 1);
           close(fd);
-          printf("%s\n", after_echo); 
+          for (int v = 1; args[v] != NULL; v++) {
+            if (v > 1) {
+              printf(" ");
+            }
+          }
+          printf("\n");
           dup2(saved, 1);
           close(saved);
         } else {
-          printf("%s\n", after_echo);
+            for (int v = 1; args[v] != NULL; v++) {
+              if (v > 1) {
+                printf(" ");
+              }
+            }
+            printf("\n");
         }
         
         
@@ -68,25 +76,11 @@ int main(int argc, char *argv[]) {
         }
         if (!foundE) {      // searching for executables
           // get PATH env variable
-          char p[1000];
-          strcpy(p, getenv("PATH"));
-          char* token = strtok(p, ":");
-          while (token != NULL) {
-            // check if file with the command name exists
-            char filename[1024];
-            strcpy(filename, token);
-            strcat(filename, "/");
-            strcat(filename, after_type);
-            if (access(filename, F_OK) == 0) {
-              // check if file has execute permissions
-              if (access(filename, X_OK) == 0) {
-                foundE = 1;
-                printf("%s is %s\n", after_type, filename);
-                break;
-              }
-              // if file exists BUT lacks execute permissions, continue
-            } 
-            token = strtok(NULL, ":");
+          char filename[1024];
+          char p[2048];
+          foundE = findPath(after_type, filename, p);
+          if (foundE) {
+            printf("%s is %s\n", after_type, filename);
           }
         }
 
@@ -121,25 +115,10 @@ int main(int argc, char *argv[]) {
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
         
-        char filename[1024];
+        char filename[1024];          // PATH
         char p[2048];
-        strcpy(p, getenv("PATH"));
-        char* token = strtok(p, ":");
-        while (token != NULL) {
-          // check if file with the command name exists
-          strcpy(filename, token);
-          strcat(filename, "/");
-          strcat(filename, args[0]);
-          if (access(filename, F_OK) == 0) {
-            // check if file has execute permissions
-            if (access(filename, X_OK) == 0) {
-              foundE = 1;
-              break;
-            }
-            // if file exists BUT lacks execute permissions, continue
-          } 
-          token = strtok(NULL, ":");
-        }
+        int foundE = findPath(args[0], filename, p);
+
         if (foundE) {
           // 1. fork  2. execvp  3. wait for child process  4. parse input w strtok
           pid_t my_pid = fork();
@@ -152,13 +131,10 @@ int main(int argc, char *argv[]) {
               int fd2 = dup2(fd, 1);
               close(fd);
             }
-
             execvp(filename, args);
+
           } if (my_pid != 0) {      // main/parent
-            int status;
-            waitpid(my_pid, &status, 0);
-            
-            fprintf(stderr, "status=%d\n", status);
+              waitpid(my_pid, NULL, 0);
             }
 
         } else {
@@ -167,50 +143,6 @@ int main(int argc, char *argv[]) {
     }
   }
   return 0;
-}
-
-void quoteEcho(char* str) {
-  int len = strlen(str);
-  int j = 0;
-  bool in_s_quote = false;
-  bool in_d_quote = false;
-  bool last_char_not_space = false;      // pretend last char was space
-  for(int i = 0; i < len; i++) {
-    if (str[i] == '\\' && !in_s_quote) {    // backslash
-      str[j] = str[i+1];
-      j++;
-      i++;
-    } else if (str[i] == '\'' && !in_d_quote) {  
-      if (in_s_quote) {
-        in_s_quote = false;     // close
-      } else {
-        in_s_quote = true;     // open
-      }
-    } else if (str[i] == '\"' && !in_s_quote) {  // double quotes
-      if (in_d_quote) {
-        in_d_quote = false;     // close
-      } else {
-        in_d_quote = true;     // open
-      }
-    } else if (in_s_quote || in_d_quote) {
-        str[j] = str[i];
-        j++;
-        last_char_not_space = true;
-    } else {                        // outside quotes
-        if (str[i] == ' ') {
-          if (last_char_not_space) {    // copy 1st space, ignore the rest
-            str[j] = str[i];
-            j++;
-            last_char_not_space = false;
-          }
-      } else {                // copy e.g. letters 
-          str[j] = str[i];
-          j++;
-          last_char_not_space = true;
-        }
-    }           
-  }
-  str[j] = '\0';
 }
 
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index) {
@@ -266,4 +198,24 @@ char* findRedirect(char** args) {
     }
   }
   return redirect_file;
+}
+
+int findPath(char* cmd, char* filename, char* p) {
+  strcpy(p, getenv("PATH"));
+  char* token = strtok(p, ":");
+  while (token != NULL) {
+    // check if file with the command name exists
+    strcpy(filename, token);
+    strcat(filename, "/");
+    strcat(filename, cmd);
+    if (access(filename, F_OK) == 0) {
+      // check if file has execute permissions
+      if (access(filename, X_OK) == 0) {
+        return 1;
+      }
+      // if file exists BUT lacks execute permissions, continue
+    } 
+    token = strtok(NULL, ":");
+  }
+  return 0;
 }
