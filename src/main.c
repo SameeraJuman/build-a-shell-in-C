@@ -120,8 +120,6 @@ int main(int argc, char *argv[]) {
         char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
-        printf("DEBUG args[0]: [%s]\n", args[0]);
-        fflush(stdout);
         char* redirect_file = findRedirect(args);
         
         char filename[100];
