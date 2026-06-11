@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
           int fd2 = dup2(fd, 1);
           close(fd);
           for (int v = 1; args[v] != NULL; v++) {
+            if (strlen(args[v]) == 0) continue; 
             if (v > 1) {
               printf(" ");
             }
@@ -54,6 +55,7 @@ int main(int argc, char *argv[]) {
           close(saved);
         } else {
             for (int v = 1; args[v] != NULL; v++) {
+              if (strlen(args[v]) == 0) continue; 
               if (v > 1) {
                 printf(" ");
               }
