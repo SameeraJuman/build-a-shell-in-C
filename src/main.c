@@ -11,6 +11,9 @@ void quoteEcho(char* str);           // consecutive spaces
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
 char* findRedirect(char** args);    // redirecting standard output
 
+char launch_parse[1024];
+char* args[100];
+
 int main(int argc, char *argv[]) {
   // Flush after every printf
   setbuf(stdout, NULL);
@@ -34,8 +37,6 @@ int main(int argc, char *argv[]) {
         char* after_echo = command + 5;
         quoteEcho(after_echo);
 
-        char launch_parse[1024];
-        char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
@@ -116,8 +117,6 @@ int main(int argc, char *argv[]) {
         
     } else {                              // launching external programs
         // searching for executables
-        char launch_parse[1024];
-        char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
         printf("ARGS: [%s] [%s] [%s]\n", args[0], args[1], args[2]);
