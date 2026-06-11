@@ -122,8 +122,8 @@ int main(int argc, char *argv[]) {
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args);
         
-        char filename[100];
-        char p[1000];
+        char filename[1024];
+        char p[2048];
         strcpy(p, getenv("PATH"));
         char* token = strtok(p, ":");
         while (token != NULL) {
