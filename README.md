@@ -41,3 +41,4 @@ The main code is in `src/main.c`.
 - Backslash escaping
 - cd, pwd, exit builtins
 - External program execution
+- Output redirection (>, 1>, 2>, >>, 1>>)
