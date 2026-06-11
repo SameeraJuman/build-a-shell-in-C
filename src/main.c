@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
         char* after_echo = command + 5;
         quoteEcho(after_echo);
 
-        char launch_parse[100];
+        char launch_parse[1024];
         char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
         
     } else {                              // launching external programs
         // searching for executables
-        char launch_parse[100];
+        char launch_parse[1024];
         char* args[100];
         int arg_index = 0;
         parseCommand(command, launch_parse, args, &arg_index);
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
           pid_t my_pid = fork();
           if (my_pid == 0) {        // child
             if (redirect_file != NULL) {
-              int fd = open(redirect_file, O_WRONLY | O_CREAT, 0777);  // opens and creates if doesnt exist 
+              int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  // opens and creates if doesnt exist 
               int fd2 = dup2(fd, 1);
               close(fd);
             }
