@@ -221,6 +221,12 @@ char* findRedirect(char** args, int* fd_num, int* append_mode) {
       args[k] = NULL;
     } else if (strcmp(args[k], "2>") == 0) {
       *fd_num = 2;
+      *append_mode = 0;
+      redirect_file = args[k+1];
+      args[k] = NULL;
+    } else if (strcmp(args[k], "2>>") == 0) {
+      *fd_num = 2;
+      *append_mode = 1;
       redirect_file = args[k+1];
       args[k] = NULL;
     } else if (strcmp(args[k], ">>") == 0 || strcmp(args[k], "1>>") == 0) {
