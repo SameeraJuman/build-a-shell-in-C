@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 void quoteEcho(char* str);           // consecutive spaces
 
@@ -140,6 +141,14 @@ int main(int argc, char *argv[]) {
         launch_parse[j] = '\0';
         arg_index++;
         args[arg_index] = NULL; 
+        
+        char* redirect_file;          // redirecting standard output
+        for (int k = 0; args[k] != NULL; k++) {
+          if (strcmp(args[k], ">") == 0 || strcmp(args[k], "1>") == 0) {
+            redirect_file = args[k+1];
+            args[k] = NULL;
+          }
+        }
 
         char filename[100];
         char p[1000];
@@ -154,7 +163,6 @@ int main(int argc, char *argv[]) {
             // check if file has execute permissions
             if (access(filename, X_OK) == 0) {
               foundE = 1;
-              // printf("%s is %s\n", args[0], filename);
               break;
             }
             // if file exists BUT lacks execute permissions, continue
@@ -165,19 +173,24 @@ int main(int argc, char *argv[]) {
           // 1. fork  2. execvp  3. wait for child process  4. parse input w strtok
           pid_t my_pid = fork();
           if (my_pid == 0) {        // child
+            int fd = open("filename.txt", O_WRONLY | O_CREAT, 0777);  // opens and creates if doesnt exist
+            if (fd == -1) {
+              printf("The file is not opened.");
+              return 2;
+            } 
+            int fd2 = dup2(fd, 1);
+            close(fd);
+
             execvp(filename, args);
           } if (my_pid != 0) {      // main/parent
               waitpid(my_pid, NULL, 0);
-              // printf("The child process ending----------\n");
             }
 
         } else {
             printf("%s: command not found\n", command);       // print error msg 
       }
     }
-
   }
-  
   return 0;
 }
 
@@ -224,3 +237,4 @@ void quoteEcho(char* str) {
   }
   str[j] = '\0';
 }
+
