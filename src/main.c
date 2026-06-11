@@ -155,7 +155,10 @@ int main(int argc, char *argv[]) {
 
             execvp(filename, args);
           } if (my_pid != 0) {      // main/parent
-              waitpid(my_pid, NULL, 0);
+            int status;
+            waitpid(my_pid, &status, 0);
+            
+            fprintf(stderr, "status=%d\n", status);
             }
 
         } else {
