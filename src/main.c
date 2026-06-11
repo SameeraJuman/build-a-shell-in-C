@@ -11,7 +11,6 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
 char* findRedirect(char** args, int* fd_num, int* append_mode);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
 
-// global variables
 char launch_parse[1024];
 char* args[100];
 
@@ -36,7 +35,10 @@ int main(int argc, char *argv[]) {
 
     } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
         // char* after_echo = command + 5;
-        
+        int arg_index = 0;
+        int fd_num = 0;
+        int append_mode;
+        int flags;
         parseCommand(command, launch_parse, args, &arg_index);
         char* redirect_file = findRedirect(args, &fd_num, &append_mode);
         if (append_mode) {
