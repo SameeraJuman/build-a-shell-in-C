@@ -46,8 +46,8 @@ int main(int argc, char *argv[]) {
           for (int v = 1; args[v] != NULL; v++) {
             if (v > 1) {
               printf(" ");
-              printf("%s", args[v]);
             }
+            printf("%s", args[v]);
           }
           printf("\n");
           dup2(saved, 1);
@@ -56,8 +56,8 @@ int main(int argc, char *argv[]) {
             for (int v = 1; args[v] != NULL; v++) {
               if (v > 1) {
                 printf(" ");
-                printf("%s", args[v]);
               }
+              printf("%s", args[v]);
             }
             printf("\n");
         }
