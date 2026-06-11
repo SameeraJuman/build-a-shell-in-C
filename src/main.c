@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
           for (int v = 1; args[v] != NULL; v++) {
             if (v > 1) {
               printf(" ");
+              printf("%s", args[v]);
             }
           }
           printf("\n");
@@ -55,11 +56,11 @@ int main(int argc, char *argv[]) {
             for (int v = 1; args[v] != NULL; v++) {
               if (v > 1) {
                 printf(" ");
+                printf("%s", args[v]);
               }
             }
             printf("\n");
         }
-        
         
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
