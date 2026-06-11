@@ -8,6 +8,8 @@
 #include <fcntl.h>
 
 void quoteEcho(char* str);           // consecutive spaces
+void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
+char* findRedirect(char** args);    // redirecting standard output
 
 int main(int argc, char *argv[]) {
   // Flush after every printf
@@ -31,7 +33,21 @@ int main(int argc, char *argv[]) {
     } else if(strncmp(command, "echo ", 5) == 0) {     // echo cmd
         char* after_echo = command + 5;
         quoteEcho(after_echo);
-        printf("%s\n", after_echo);
+
+        parseCommand(char* command, char* launch_parse, char** args, int* arg_index);
+        char* redirect_file = findRedirect(args);
+        if (redirect_file != NULL) {
+          int saved = dup(1);
+          int fd = open(redirect_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);  
+          int fd2 = dup2(fd, 1);
+          close(fd);
+          printf("%s\n", after_echo); 
+          dup2(saved, 1);
+          close(saved);
+        } else {
+          printf("%s\n", after_echo);
+        }
+        
         
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
@@ -97,59 +113,9 @@ int main(int argc, char *argv[]) {
         
     } else {                              // launching external programs
         // searching for executables
-        char launch_parse[100];
-        char* args[100];
-        int arg_index = 0;
-        strcpy(launch_parse, command);
-        args[0] = launch_parse;
-        int len = strlen(launch_parse);
-        int j = 0;
-        bool in_s_quote = false;
-        bool in_d_quote = false;
-        for(int i = 0; i < len; i++) {
-          if (launch_parse[i] == '\\' && !in_s_quote) {    // backslash
-            launch_parse[j] = launch_parse[i+1];
-            j++;
-            i++;
-          } else if (launch_parse[i] == '\'' && !in_d_quote) {  
-            if (in_s_quote) {
-              in_s_quote = false;     // close
-            } else {
-              in_s_quote = true;     // open
-            }
-          } else if (launch_parse[i] == '\"' && !in_s_quote) {  // double quotes
-            if (in_d_quote) {
-              in_d_quote = false;     // close
-            } else {
-              in_d_quote = true;     // open
-            } 
-          } else if (in_s_quote || in_d_quote) {
-              launch_parse[j] = launch_parse[i];
-              j++;
-            } else {                        // outside quotes
-                if (launch_parse[i] == ' ') {
-                  launch_parse[j] = '\0';
-                  j++;
-                  arg_index++;
-                  args[arg_index] = launch_parse + j;
-              } else {
-                  launch_parse[j] = launch_parse[i];
-                  j++;
-                }
-          }           
-        }
-        launch_parse[j] = '\0';
-        arg_index++;
-        args[arg_index] = NULL; 
+        parseCommand(command, launch_parse, args, &arg_index);
+        char* redirect_file = findRedirect(args);
         
-        char* redirect_file = NULL;          // redirecting standard output
-        for (int k = 0; args[k] != NULL; k++) {
-          if (strcmp(args[k], ">") == 0 || strcmp(args[k], "1>") == 0) {
-            redirect_file = args[k+1];
-            args[k] = NULL;
-          }
-        }
-
         char filename[100];
         char p[1000];
         strcpy(p, getenv("PATH"));
@@ -178,7 +144,7 @@ int main(int argc, char *argv[]) {
               int fd2 = dup2(fd, 1);
               close(fd);
             }
-            
+
             execvp(filename, args);
           } if (my_pid != 0) {      // main/parent
               waitpid(my_pid, NULL, 0);
@@ -236,3 +202,60 @@ void quoteEcho(char* str) {
   str[j] = '\0';
 }
 
+void parseCommand(char* command, char* launch_parse, char** args, int* arg_index) {
+  char launch_parse[100];
+  char* args[100];
+  int arg_index = 0;
+  strcpy(launch_parse, command);
+  args[0] = launch_parse;
+  int len = strlen(launch_parse);
+  int j = 0;
+  bool in_s_quote = false;
+  bool in_d_quote = false;
+  for(int i = 0; i < len; i++) {
+    if (launch_parse[i] == '\\' && !in_s_quote) {    // backslash
+      launch_parse[j] = launch_parse[i+1];
+      j++;
+      i++;
+    } else if (launch_parse[i] == '\'' && !in_d_quote) {  
+      if (in_s_quote) {
+        in_s_quote = false;     // close
+      } else {
+        in_s_quote = true;     // open
+      }
+    } else if (launch_parse[i] == '\"' && !in_s_quote) {  // double quotes
+      if (in_d_quote) {
+        in_d_quote = false;     // close
+      } else {
+        in_d_quote = true;     // open
+      } 
+    } else if (in_s_quote || in_d_quote) {
+        launch_parse[j] = launch_parse[i];
+        j++;
+      } else {                        // outside quotes
+          if (launch_parse[i] == ' ') {
+            launch_parse[j] = '\0';
+            j++;
+            arg_index++;
+            args[arg_index] = launch_parse + j;
+        } else {
+            launch_parse[j] = launch_parse[i];
+            j++;
+          }
+    }           
+  }
+  launch_parse[j] = '\0';
+  arg_index++;
+  args[arg_index] = NULL; 
+}   
+
+char* findRedirect(char** args) {
+  char* redirect_file = NULL;         
+  for (int k = 0; args[k] != NULL; k++) {
+    if (strcmp(args[k], ">") == 0 || strcmp(args[k], "1>") == 0) {
+      redirect_file = args[k+1];
+      args[k] = NULL;
+    }
+  }
+  return redirect_file;
+}
