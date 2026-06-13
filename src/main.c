@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -285,6 +286,7 @@ char* completion_generator(const char* user_input, int state) {
   char p2[2048];
   static char dir_path[2048];
   char* fn;
+  struct stat buf;
   
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
@@ -297,7 +299,7 @@ char* completion_generator(const char* user_input, int state) {
   }
 
   if (strchr(rl_line_buffer, ' ') != NULL) {
-    if ((last_slash = strrchr(user_input, '/')) != NULL) {
+    if ((last_slash = strrchr(user_input, '/')) != NULL) {  // NESTED FILE
       strcpy(p2, user_input);
       last_slash = strrchr(p2, '/');
       fn = last_slash + 1;    // after / is prefix
@@ -316,13 +318,19 @@ char* completion_generator(const char* user_input, int state) {
           char full_path[2048];
           strcpy(full_path, dir_path);
           strcat(full_path, de->d_name);
+          stat(full_path, &buf);
+          if (S_ISDIR(buf.st_mode)) {   // its a dir
+            rl_completion_append_character = '/';
+          } else {
+            rl_completion_append_character = ' ';
+          }
           return strdup(full_path);      // return copy of match
         } 
       }
       closedir(nested_dr);
       nested_dr = NULL;
 
-    } else {    // FILENAME
+    } else {    // FILENAME and no / , DIR NAME
       // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
         if (curr_dr == NULL) {
           curr_dr = opendir(".");
@@ -331,13 +339,23 @@ char* completion_generator(const char* user_input, int state) {
           }
         }
         while ((de = readdir(curr_dr)) != NULL) {
+          if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) continue;
           if(strncmp (de->d_name, user_input, len) == 0) {
+            char full_path[2048];
+            strcpy(full_path, "./");
+            strcat(full_path, de->d_name);
+            stat(full_path, &buf);
+            if (S_ISDIR(buf.st_mode)) {   // its a dir
+              rl_completion_append_character = '/';
+            } else {
+              rl_completion_append_character = ' ';
+            }
             return strdup(de->d_name);      // return copy of match
           } 
         }
         closedir(curr_dr);
         curr_dr = NULL;
-    }
+    } 
 
   } else {
       while (builtin_cmd_name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
