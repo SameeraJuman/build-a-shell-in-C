@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
     if (command == NULL) {
       break;
     }
+    add_history(command);
 
     if(strcmp(command, "exit") == 0) {                  // exit cmd
       break;
@@ -271,53 +272,71 @@ int findPath(char* cmd, char* filename, char* p) {
 char* completion_generator(const char* user_input, int state) {
   static int list_index;
   static int len;
-  char* name;
+  char* builtin_cmd_name;              
   int match_found = 0;
   char filename[1024];          // PATH
   static char p[2048];
   static char* token;
-  struct dirent *de;
-  static DIR *dr;
+  struct dirent *de;          // readdir(dr) returns each file as this type
+  static DIR *dr;             // opendir(path) returns this type
+  static DIR *curr_dr;
 
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
     len = strlen(user_input);
-    strcpy(p, getenv("PATH"));
+    strcpy(p, getenv("PATH"));    // PATH
     token = strtok(p, ":");
     dr = NULL;
   }
-  while (name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
-    list_index++;
-    if(strncmp (name, user_input, len) == 0) {
-      match_found = 1;
-      return strdup(name);      // return copy of match
-    } 
-  }
-  // PATH
-  while (token != NULL) {
-    if (dr == NULL) {
-      dr = opendir(token);
-      if (dr == NULL) {
-        token = strtok(NULL, ":");
-        continue;
-      }
+
+  if (strchr(rl_line_buffer, ' ') != NULL) {
+  // FILENAME
+  // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
+    curr_dr = opendir(".");
+    if (curr_dr == NULL) {         
+      return NULL;
     }
-    while ((de = readdir(dr)) != NULL) {
-      strcpy(filename, token);
-      strcat(filename, "/");
-      strcat(filename, de->d_name);
+    while ((de = readdir(curr_dr)) != NULL) {
       if(strncmp (de->d_name, user_input, len) == 0) {
-        if (access(filename, F_OK) == 0) {
-          if (access(filename, X_OK) == 0) {
-            match_found = 1;
-            return strdup(de->d_name);      // return copy of match
-          }
-        }
+        return strdup(de->d_name);      // return copy of match
       } 
     }
-    closedir(dr);
-    dr = NULL;
-    token = strtok(NULL, ":");
+    closedir(curr_dr);
+
+  } else {
+      while (builtin_cmd_name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
+        list_index++;
+        if(strncmp (builtin_cmd_name, user_input, len) == 0) {
+          match_found = 1;
+          return strdup(builtin_cmd_name);      // return copy of match
+        } 
+      }
+      // PATH
+      while (token != NULL) {
+        if (dr == NULL) {     // Only open a new dir when we don't already have one open
+          dr = opendir(token);      // open dir
+          if (dr == NULL) {         // the dir doesn't exist or can't be opened
+            token = strtok(NULL, ":");
+            continue;
+          }
+        }
+        while ((de = readdir(dr)) != NULL) {        // reads next file from the open dir
+          strcpy(filename, token);
+          strcat(filename, "/");
+          strcat(filename, de->d_name);       // d_name — the filename
+          if(strncmp (de->d_name, user_input, len) == 0) {
+            if (access(filename, F_OK) == 0) {
+              if (access(filename, X_OK) == 0) {
+                match_found = 1;
+                return strdup(de->d_name);      // return copy of match
+              }
+            }
+          } 
+        }
+        closedir(dr);
+        dr = NULL;                  // open a new dir
+        token = strtok(NULL, ":");
+      }
   }
   fprintf(stderr, "\x07");
   return ((char*)NULL);       // if no names matched, then stop
