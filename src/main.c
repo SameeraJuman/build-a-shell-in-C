@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -271,9 +272,17 @@ char* completion_generator(const char* user_input, int state) {
   static int len;
   char* name;
   int match_found = 0;
+  char filename[1024];          // PATH
+  static char p[2048];
+  static char* token;
+  struct dirent *de;
+  static DIR *dr;
+
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
     len = strlen(user_input);
+    strcpy(p, getenv("PATH"));
+    token = strtok(p, ":");
   }
   while (name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
     list_index++;
@@ -282,9 +291,29 @@ char* completion_generator(const char* user_input, int state) {
       return strdup(name);      // return copy of match
     } 
   }
-  if (match_found == 0) {
-    fprintf(stderr, "\x07");
-    return ((char*)NULL);   // if no names matched, then stop
+  // PATH
+  while (token != NULL) {
+    dr = opendir(token);
+    if (dr == NULL) {
+      token = strtok(NULL, ":");
+      continue;
+    }
+    while ((de = readdir(dr)) != NULL) {
+      strcpy(filename, token);
+      strcat(filename, "/");
+      strcat(filename, de->d_name);
+      if(strncmp (de->d_name, user_input, len) == 0) {
+        if (access(filename, F_OK) == 0) {
+          if (access(filename, X_OK) == 0) {
+            match_found = 1;
+            return strdup(de->d_name);      // return copy of match
+          }
+        }
+      } 
+    }
+    closedir(dr);
+    token = strtok(NULL, ":");
   }
-  return ((char*)NULL);
+  fprintf(stderr, "\x07");
+  return ((char*)NULL);       // if no names matched, then stop
 }
