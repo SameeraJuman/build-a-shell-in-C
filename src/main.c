@@ -279,7 +279,7 @@ char* completion_generator(const char* user_input, int state) {
   static char* token;
   struct dirent *de;          // readdir(dr) returns each file as this type
   static DIR *dr;             // opendir(path) returns this type
-  DIR *curr_dr;
+  static DIR *curr_dr;
 
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
@@ -287,21 +287,25 @@ char* completion_generator(const char* user_input, int state) {
     strcpy(p, getenv("PATH"));    // PATH
     token = strtok(p, ":");
     dr = NULL;
+    curr_dr = NULL;             // FILENAME
   }
 
   if (strchr(rl_line_buffer, ' ') != NULL) {
   // FILENAME
   // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
+  if (curr_dr == NULL) {
     curr_dr = opendir(".");
     if (curr_dr == NULL) {         
       return NULL;
     }
+  }
     while ((de = readdir(curr_dr)) != NULL) {
       if(strncmp (de->d_name, user_input, len) == 0) {
         return strdup(de->d_name);      // return copy of match
       } 
     }
     closedir(curr_dr);
+    curr_dr = NULL;
 
   } else {
       while (builtin_cmd_name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
