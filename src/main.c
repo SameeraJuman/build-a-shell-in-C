@@ -280,7 +280,12 @@ char* completion_generator(const char* user_input, int state) {
   struct dirent *de;          // readdir(dr) returns each file as this type
   static DIR *dr;             // opendir(path) returns this type
   static DIR *curr_dr;
-
+  static DIR *nested_dr;
+  char* last_slash;
+  char p2[2048];
+  static char dir_path[2048];
+  char* fn;
+  
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
     len = strlen(user_input);
@@ -288,24 +293,51 @@ char* completion_generator(const char* user_input, int state) {
     token = strtok(p, ":");
     dr = NULL;
     curr_dr = NULL;             // FILENAME
+    nested_dr = NULL;
   }
 
   if (strchr(rl_line_buffer, ' ') != NULL) {
-  // FILENAME
-  // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
-  if (curr_dr == NULL) {
-    curr_dr = opendir(".");
-    if (curr_dr == NULL) {         
-      return NULL;
+    if ((last_slash = strrchr(user_input, '/')) != NULL) {
+      strcpy(p2, user_input);
+      last_slash = strrchr(p2, '/');
+      fn = last_slash + 1;    // after / is prefix
+      *(last_slash + 1) = '\0';     // p2 has path alone
+
+      if (nested_dr == NULL) {
+        strcpy(dir_path, p2);
+        nested_dr = opendir(p2);
+        if (nested_dr == NULL) {         
+          return NULL;
+        }
+      }
+      while ((de = readdir(nested_dr)) != NULL) {
+        if(strncmp (de->d_name, fn, strlen(fn)) == 0) {
+          char full_path[2048];
+          strcpy(full_path, dir_path);
+          strcat(full_path, de->d_name);
+          return strdup(full_path);      // return copy of match
+        } 
+      }
+      closedir(nested_dr);
+      nested_dr = NULL;
+
+    } else {
+      // FILENAME
+      // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
+        if (curr_dr == NULL) {
+          curr_dr = opendir(".");
+          if (curr_dr == NULL) {         
+            return NULL;
+          }
+        }
+        while ((de = readdir(curr_dr)) != NULL) {
+          if(strncmp (de->d_name, user_input, len) == 0) {
+            return strdup(de->d_name);      // return copy of match
+          } 
+        }
+        closedir(curr_dr);
+        curr_dr = NULL;
     }
-  }
-    while ((de = readdir(curr_dr)) != NULL) {
-      if(strncmp (de->d_name, user_input, len) == 0) {
-        return strdup(de->d_name);      // return copy of match
-      } 
-    }
-    closedir(curr_dr);
-    curr_dr = NULL;
 
   } else {
       while (builtin_cmd_name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
