@@ -311,6 +311,7 @@ char* completion_generator(const char* user_input, int state) {
         }
       }
       while ((de = readdir(nested_dr)) != NULL) {
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) continue;
         if(strncmp (de->d_name, fn, strlen(fn)) == 0) {
           char full_path[2048];
           strcpy(full_path, dir_path);
@@ -321,8 +322,7 @@ char* completion_generator(const char* user_input, int state) {
       closedir(nested_dr);
       nested_dr = NULL;
 
-    } else {
-      // FILENAME
+    } else {    // FILENAME
       // 1. get "re" (user_input)    2. Search the current dir for files that start with "re"
         if (curr_dr == NULL) {
           curr_dr = opendir(".");
