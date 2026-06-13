@@ -270,7 +270,7 @@ char* completion_generator(const char* user_input, int state) {
   static int list_index;
   static int len;
   char* name;
-
+  int match_found = 0;
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
     len = strlen(user_input);
@@ -278,8 +278,13 @@ char* completion_generator(const char* user_input, int state) {
   while (name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
     list_index++;
     if(strncmp (name, user_input, len) == 0) {
+      match_found = 1;
       return strdup(name);      // return copy of match
-    }
+    } 
   }
-  return ((char*)NULL);   // if no names matched, then stop
+  if (match_found == 0) {
+    fprintf(stderr, "\x07");
+    return ((char*)NULL);   // if no names matched, then stop
+  }
+  return ((char*)NULL);
 }
