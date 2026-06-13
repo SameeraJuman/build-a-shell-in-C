@@ -42,3 +42,6 @@ The main code is in `src/main.c`.
 - cd, pwd, exit builtins
 - External program execution
 - Output redirection (>, 1>, 2>, >>, 1>>)
+
+## Implement later
+- the user can press the up arrow to see previous commands

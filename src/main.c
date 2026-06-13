@@ -6,29 +6,36 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
 char* findRedirect(char** args, int* fd_num, int* append_mode);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
+char* completion_generator(const char* user_input, int state);                         // tab completion
 
 char launch_parse[1024];
 char* args[100];
+char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
 
+// MAIN METHOD
 int main(int argc, char *argv[]) {
   // Flush after every printf
   setbuf(stdout, NULL);
 
+  // tab completion
+  rl_completion_entry_function = completion_generator;  // when the user presses TAB, call MY function to find completions
+  rl_bind_key('\t', rl_complete);  // TAB is the key that triggers it
+
   while(1) {
     int foundB = 0;
     int foundE = 0;
-    printf("$ ");     // display the prompt $
 
-    // read user input
-    char command[1024];
-    fgets(command, sizeof(command), stdin);
-    command[strcspn(command, "\n")] = 0;        // remove newline from command
-    
-    // printf("variable command: %s", command);      // DEBUG
+    // display the prompt $ and read user input
+    char* command = readline("$ ");
+    if (command == NULL) {
+      break;
+    }
 
     if(strcmp(command, "exit") == 0) {                  // exit cmd
       break;
@@ -75,7 +82,6 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
-        char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
         int i;
         int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
         char* after_type = command + 5;
@@ -163,6 +169,7 @@ int main(int argc, char *argv[]) {
             printf("%s: command not found\n", command);       // print error msg 
       }
     }
+    free(command);
   }
   return 0;
 }
@@ -257,4 +264,22 @@ int findPath(char* cmd, char* filename, char* p) {
     token = strtok(NULL, ":");
   }
   return 0;
+}
+
+char* completion_generator(const char* user_input, int state) {
+  static int list_index;
+  static int len;
+  char* name;
+
+  if (state == 0) {   // if new word, then start from starting
+    list_index = 0;
+    len = strlen(user_input);
+  }
+  while (name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
+    list_index++;
+    if(strncmp (name, user_input, len) == 0) {
+      return strdup(name);      // return copy of match
+    }
+  }
+  return ((char*)NULL);   // if no names matched, then stop
 }
