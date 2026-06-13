@@ -43,4 +43,6 @@ The main code is in `src/main.c`.
 - External program execution
 - Output redirection (>, 1>, 2>, >>, 1>>)
 - Tab completion for builtins and executables
+- Tab completion for filenames and nested paths
+- Directory completion with trailing slash
 - Command history (up/down arrow navigation)
