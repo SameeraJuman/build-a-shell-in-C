@@ -284,6 +284,7 @@ char* completion_generator(const char* user_input, int state) {
     len = strlen(user_input);
     strcpy(p, getenv("PATH"));
     token = strtok(p, ":");
+    dr = NULL;
   }
   while (name = builtin_cmd[list_index]) {    // return the nxt name which partially matches from the list
     list_index++;
@@ -313,6 +314,7 @@ char* completion_generator(const char* user_input, int state) {
       } 
     }
     closedir(dr);
+    dr = NULL;
     token = strtok(NULL, ":");
   }
   fprintf(stderr, "\x07");
