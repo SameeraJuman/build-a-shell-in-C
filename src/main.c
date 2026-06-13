@@ -279,7 +279,7 @@ char* completion_generator(const char* user_input, int state) {
   static char* token;
   struct dirent *de;          // readdir(dr) returns each file as this type
   static DIR *dr;             // opendir(path) returns this type
-  static DIR *curr_dr;
+  DIR *curr_dr;
 
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
