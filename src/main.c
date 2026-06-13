@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
   // tab completion
   rl_completion_entry_function = completion_generator;  // when the user presses TAB, call MY function to find completions
   rl_bind_key('\t', rl_complete);  // TAB is the key that triggers it
+  rl_completion_append_character = ' ';
 
   while(1) {
     int foundB = 0;
