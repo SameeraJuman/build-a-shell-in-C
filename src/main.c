@@ -295,10 +295,12 @@ char* completion_generator(const char* user_input, int state) {
   }
   // PATH
   while (token != NULL) {
-    dr = opendir(token);
     if (dr == NULL) {
-      token = strtok(NULL, ":");
-      continue;
+      dr = opendir(token);
+      if (dr == NULL) {
+        token = strtok(NULL, ":");
+        continue;
+      }
     }
     while ((de = readdir(dr)) != NULL) {
       strcpy(filename, token);
