@@ -427,11 +427,10 @@ char** my_completion(const char* user_input, int start, int end) {
         stat(full_path, &buf);
         if (S_ISDIR(buf.st_mode)) {   // its a dir
           printf("/");
-        } else {                    // its a file
-          printf(" ");
-        }
+        } 
         printf("  ");
       }
+      printf("\n");
       rl_forced_update_display();
       return NULL;
       
