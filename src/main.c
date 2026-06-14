@@ -421,12 +421,11 @@ char** my_completion(const char* user_input, int start, int end) {
       printf("\n");
       for (g = 1; matches[g] != NULL; g++) {
         printf("%s", matches[g]);
-        printf("  ");
         stat(matches[g], &buf);
         if (S_ISDIR(buf.st_mode)) {   // its a dir
           printf("/");
         } else {
-          printf(" ");
+          printf("  ");
         }
       }
       rl_forced_update_display();
