@@ -432,7 +432,7 @@ char** my_completion(const char* user_input, int start, int end) {
       }
       printf("\n");
       fflush(stdout);
-      rl_forced_update_display();
+      rl_redisplay();
       return NULL;
       
     } else {                                // 1st tab
