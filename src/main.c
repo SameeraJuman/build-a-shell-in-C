@@ -15,6 +15,7 @@ void parseCommand(char* command, char* launch_parse, char** args, int* arg_index
 char* findRedirect(char** args, int* fd_num, int* append_mode);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
 char* completion_generator(const char* user_input, int state);                         // tab completion
+char** my_completion(const char* user_input, int start, int end)    // multiple matches
 
 char launch_parse[1024];
 char* args[100];
