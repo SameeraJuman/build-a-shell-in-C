@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
   setbuf(stdout, NULL);
 
   // tab completion
-  rl_completion_entry_function = completion_generator;  // when the user presses TAB, call MY function to find completions
+  rl_attempted_completion_function = my_completion;  // when the user presses TAB, call MY function to find completions
   rl_bind_key('\t', rl_complete);  // TAB is the key that triggers it
-  rl_completion_append_character = ' ';
+  rl_completion_append_character = ' ';    
 
   while(1) {
     int foundB = 0;
@@ -394,4 +394,46 @@ char* completion_generator(const char* user_input, int state) {
   }
   fprintf(stderr, "\x07");
   return ((char*)NULL);       // if no names matched, then stop
+}
+
+int comp(const void *a, const void *b) {    // sort ascending
+  return (*(int *)a - *(int *)b);
+}
+
+char** my_completion(const char* user_input, int start, int end) {
+  struct stat buf;
+  char** matches = rl_completion_matches(user_input, completion_generator);  // generate array
+  if (matches == NULL) {
+    return NULL;
+  }
+
+  int g;
+  for (g = 0; matches[g] != NULL; g++);     // counting matches
+
+  if (g == 1) {
+    return matches;
+  } 
+  if (g > 1) {
+    if (rl_last_func == rl_complete) {        // 2nd tab
+      qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
+      printf("\n");
+      for (g = 1; matches[g] != NULL; g++) {
+        printf("%s", matches[g]);
+        printf("  ");
+        stat(matches[g], &buf);
+        if (S_ISDIR(buf.st_mode)) {   // its a dir
+          printf("/");
+        } else {
+          printf(" ");
+        }
+      }
+      rl_forced_update_display();
+      return NULL;
+      
+    } else {                                // 1st tab
+      fprintf(stderr, "\x07");
+      return NULL;
+    }    
+  }
+  return matches;
 }
