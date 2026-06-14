@@ -14,7 +14,8 @@
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index);  // detecting quotes, backslashes, splitting on spaces. 
 char* findRedirect(char** args, int* fd_num, int* append_mode);    // redirecting standard output
 int findPath(char* cmd, char* filename, char* p);
-char* completion_generator(const char* user_input, int state);                         // tab completion
+char* completion_generator(const char* user_input, int state);      // tab completion
+int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
 
 char launch_parse[1024];
@@ -398,7 +399,7 @@ char* completion_generator(const char* user_input, int state) {
 }
 
 int comp(const void *a, const void *b) {    // sort ascending
-  return (*(int *)a - *(int *)b);
+  return strcmp(*(char**)a, *(char**)b);
 }
 
 char** my_completion(const char* user_input, int start, int end) {
