@@ -431,6 +431,7 @@ char** my_completion(const char* user_input, int start, int end) {
         printf("  ");
       }
       fflush(stdout);
+      rl_on_new_line();
       rl_redisplay();
       return NULL;
       
