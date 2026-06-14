@@ -431,6 +431,7 @@ char** my_completion(const char* user_input, int start, int end) {
         printf("  ");
       }
       printf("\n");
+      fflush(stdout);
       rl_forced_update_display();
       return NULL;
       
