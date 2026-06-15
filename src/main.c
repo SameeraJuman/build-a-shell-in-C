@@ -433,7 +433,7 @@ char** my_completion(const char* user_input, int start, int end) {
       write(STDOUT_FILENO, "\n", 1);
       rl_on_new_line();
       rl_forced_update_display();
-      rl_last_func = NULL;
+      rl_last_func = rl_insert;
       return NULL;
       
     } else {                                // 1st tab
