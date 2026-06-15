@@ -435,7 +435,8 @@ write(STDOUT_FILENO, "\n", 1);
 rl_reset_line_state();
 rl_on_new_line();
 rl_redisplay();
-      return NULL;
+rl_last_func = NULL;
+return NULL;
       
     } else {                                // 1st tab
       fprintf(stderr, "\x07");
