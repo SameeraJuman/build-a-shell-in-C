@@ -431,9 +431,10 @@ char** my_completion(const char* user_input, int start, int end) {
         printf("  ");
       }
       fflush(stdout);
-      write(STDOUT_FILENO, "\n", 1);
-      rl_on_new_line();
-      rl_forced_update_display();
+write(STDOUT_FILENO, "\n", 1);
+rl_reset_line_state();
+rl_on_new_line();
+rl_redisplay();
       return NULL;
       
     } else {                                // 1st tab
