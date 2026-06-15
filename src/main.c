@@ -403,6 +403,7 @@ int comp(const void *a, const void *b) {    // sort ascending
 }
 
 char** my_completion(const char* user_input, int start, int end) {
+  fprintf(stderr, "DEBUG my_completion called\n");
   struct stat buf;
   char** matches = rl_completion_matches(user_input, completion_generator);  // generate array
   if (matches == NULL) {
@@ -411,7 +412,8 @@ char** my_completion(const char* user_input, int start, int end) {
 
   int g;
   for (g = 0; matches[g] != NULL; g++);     // counting matches
-
+  fprintf(stderr, "DEBUG count: %d\n", g);
+  fprintf(stderr, "DEBUG rl_last_func == rl_complete: %d\n", rl_last_func == rl_complete);
   if (g == 1) {
     return matches;
   } 
@@ -431,12 +433,15 @@ char** my_completion(const char* user_input, int start, int end) {
         printf("  ");
       }
       fflush(stdout);
-write(STDOUT_FILENO, "\n", 1);
-rl_reset_line_state();
-rl_on_new_line();
-rl_redisplay();
-rl_last_func = NULL;
-return NULL;
+      write(STDOUT_FILENO, "\n", 1);
+      fprintf(stderr, "\nDEBUG line_buffer: [%s]\n", rl_line_buffer);
+fprintf(stderr, "DEBUG point: %d\n", rl_point);
+fprintf(stderr, "DEBUG end: %d\n", rl_end);
+      rl_reset_line_state();
+      rl_on_new_line();
+      rl_redisplay();
+      rl_last_func = NULL;
+      return NULL;
       
     } else {                                // 1st tab
       fprintf(stderr, "\x07");
