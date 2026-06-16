@@ -19,10 +19,13 @@ int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
 void my_display_matches(char** matches, int num_matches, int max_length);
 
+// MARK: variables
 char launch_parse[1024];
 char* args[100];
 char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
-char* complete_flag[] = {"-p"};
+char* complete_cmd[1024];
+char* complete_path[1024];
+int compl_counter = 0;
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -91,11 +94,24 @@ int main(int argc, char *argv[]) {
         }
         
     } else if(strncmp(command, "complete ", 9) == 0) {       // complete cmd
-      int arg_index = 0;
-      parseCommand(command, launch_parse, args, &arg_index);
-      if (strcmp(args[1], complete_flag[0]) == 0) {
-        printf("complete: %s: no completion specification\n", args[2]);
-      }
+        int arg_index = 0;
+        bool foundC = false;
+        parseCommand(command, launch_parse, args, &arg_index);
+        if (strcmp(args[1], "-C") == 0) {  
+          complete_path[compl_counter] = strdup(args[2]);   // store path
+          complete_cmd[compl_counter] = strdup(args[3]);    // store cmd
+          compl_counter++;
+        } else if (strcmp(args[1], "-p") == 0) {    
+          for (int c = 0; complete_cmd[c] != NULL; c++) {
+            if (strcmp(args[2], complete_cmd[c]) == 0) {
+              foundC = true;
+              printf("complete -C '%s' %s\n", complete_path[c], complete_cmd[c]);
+            }
+          }
+          if (!foundC) {
+            printf("complete: %s: no completion specification\n", args[2]);
+          }
+        }   
 
       } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         int i;
