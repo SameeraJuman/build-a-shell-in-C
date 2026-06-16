@@ -420,10 +420,19 @@ char** my_completion(const char* user_input, int start, int end) {
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
       return matches;  // let the hook handle display
-} else {
-    fprintf(stderr, "\x07");
-    return NULL;
-} 
+} else {                             // 1st tab
+  // Check if matches[0] (the common prefix) is longer than user_input
+  if (strlen(matches[0]) > strlen(user_input)) {
+      // There's a common prefix to complete — let readline insert it
+      return matches;
+  } else {
+      // No common prefix beyond what's typed — ring bell
+      fprintf(stderr, "\x07");
+      for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
+      free(matches);
+      return NULL;
+      }
+    }
   }
   return matches;
 }
