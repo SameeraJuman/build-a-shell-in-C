@@ -429,11 +429,12 @@ char** my_completion(const char* user_input, int start, int end) {
         } 
         printf("  ");
       }
+      printf("\n");
       fflush(stdout);
-      write(STDOUT_FILENO, "\n", 1);
       rl_on_new_line();
       rl_forced_update_display();
-      rl_last_func = rl_insert;
+      for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
+      free(matches);
       return NULL;
       
     } else {                                // 1st tab
