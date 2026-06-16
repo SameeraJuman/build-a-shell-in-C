@@ -417,21 +417,21 @@ char** my_completion(const char* user_input, int start, int end) {
   if (g > 1) {
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
-      rl_crlf();
+      write(STDOUT_FILENO, "\n", 1);
       for (int h = 1; matches[h] != NULL; h++) {
-        printf("%s", matches[h]);
+        write(STDOUT_FILENO, matches[h], strlen(matches[h]));
         char full_path[2048];
         snprintf(full_path, sizeof(full_path), "./%s", matches[h]);
         stat(full_path, &buf);
         if (S_ISDIR(buf.st_mode)) {   // its a dir
-          printf("/");
+          write(STDOUT_FILENO, "/", 1);
         } 
-        printf("  ");
+        write(STDOUT_FILENO, "  ", 2);
       }
-      printf("\n");
-      fflush(stdout);
+      write(STDOUT_FILENO, "\n", 1);
+      write(STDOUT_FILENO, "$ ", 2);
+      write(STDOUT_FILENO, rl_line_buffer, strlen(rl_line_buffer));
       rl_on_new_line();
-      rl_redisplay();
       for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
       free(matches);
       return NULL;
