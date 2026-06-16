@@ -421,8 +421,7 @@ char** my_completion(const char* user_input, int start, int end) {
       for (g = 1; matches[g] != NULL; g++) {
         printf("%s", matches[g]);
         char full_path[2048];
-        strcpy(full_path, "./");
-        strcat(full_path, matches[g]);
+        snprintf(full_path, sizeof(full_path), "./%s", matches[h]);
         stat(full_path, &buf);
         if (S_ISDIR(buf.st_mode)) {   // its a dir
           printf("/");
