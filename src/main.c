@@ -22,6 +22,7 @@ void my_display_matches(char** matches, int num_matches, int max_length);
 char launch_parse[1024];
 char* args[100];
 char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
+char* complete_flag[] = {"-p"};
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -89,7 +90,13 @@ int main(int argc, char *argv[]) {
             printf("\n");
         }
         
-    } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
+    } else if(strncmp(command, "complete ", 9) == 0) {       // complete cmd
+      parseCommand(command, launch_parse, args, &arg_index);
+      if (strcmp(args[1], complete_flag[0]) == 0) {
+        printf("complete: %s: no completion specification\n", args[2]);
+      }
+
+      } else if (strncmp(command, "type ", 5) == 0) {       // type cmd
         int i;
         int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
         char* after_type = command + 5;
