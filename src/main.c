@@ -417,9 +417,9 @@ char** my_completion(const char* user_input, int start, int end) {
   if (g > 1) {
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
-      printf("\n");
-      for (g = 1; matches[g] != NULL; g++) {
-        printf("%s", matches[g]);
+      rl_crlf();
+      for (int h = 1; matches[h] != NULL; h++) {
+        printf("%s", matches[h]);
         char full_path[2048];
         snprintf(full_path, sizeof(full_path), "./%s", matches[h]);
         stat(full_path, &buf);
