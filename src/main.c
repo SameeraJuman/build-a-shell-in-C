@@ -17,7 +17,7 @@ int findPath(char* cmd, char* filename, char* p);
 char* completion_generator(const char* user_input, int state);      // tab completion
 int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
-void my_display_matches(char** matches, int num_matches, int max_length)
+void my_display_matches(char** matches, int num_matches, int max_length);
 
 char launch_parse[1024];
 char* args[100];
