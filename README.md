@@ -37,12 +37,16 @@ Note: This section is for stages 2 and beyond.
 The main code is in `src/main.c`.
 
 ## Features implemented so far
-- echo with single and double quote support
+- `echo` with single and double quote support
 - Backslash escaping
-- cd, pwd, exit builtins
-- External program execution
-- Output redirection (>, 1>, 2>, >>, 1>>)
-- Tab completion for builtins and executables
-- Tab completion for filenames and nested paths
-- Directory completion with trailing slash
+- `cd`, `pwd`, `exit`, `complete` builtins
+- External program execution via PATH lookup
+- Output redirection (`>`, `1>`, `2>`, `>>`, `1>>`, `2>>`)
 - Command history (up/down arrow navigation)
+- Tab completion for builtins and executables
+- Tab completion for files, directories, and nested paths (e.g. `foo/bar/file`)
+- Directory completion with trailing `/`
+- Bell on no match
+- Multiple match display with alphabetical sorting
+- Partial completion to longest common prefix
+- Multi-argument tab completion
