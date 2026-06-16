@@ -432,7 +432,7 @@ char** my_completion(const char* user_input, int start, int end) {
       printf("\n");
       fflush(stdout);
       rl_on_new_line();
-      rl_forced_update_display();
+      rl_redisplay();
       for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
       free(matches);
       return NULL;
