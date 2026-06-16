@@ -17,6 +17,7 @@ int findPath(char* cmd, char* filename, char* p);
 char* completion_generator(const char* user_input, int state);      // tab completion
 int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
+void my_display_matches(char** matches, int num_matches, int max_length)
 
 char launch_parse[1024];
 char* args[100];
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
   rl_attempted_completion_function = my_completion;  // when the user presses TAB, call MY function to find completions
   rl_bind_key('\t', rl_complete);  // TAB is the key that triggers it
   rl_completion_append_character = ' ';    
+  rl_completion_display_matches_hook = my_display_matches;
 
   while(1) {
     int foundB = 0;
@@ -417,29 +419,27 @@ char** my_completion(const char* user_input, int start, int end) {
   if (g > 1) {
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
-      write(STDOUT_FILENO, "\n", 1);
-      for (int h = 1; matches[h] != NULL; h++) {
-        write(STDOUT_FILENO, matches[h], strlen(matches[h]));
-        char full_path[2048];
-        snprintf(full_path, sizeof(full_path), "./%s", matches[h]);
-        stat(full_path, &buf);
-        if (S_ISDIR(buf.st_mode)) {   // its a dir
-          write(STDOUT_FILENO, "/", 1);
-        } 
-        write(STDOUT_FILENO, "  ", 2);
-      }
-      write(STDOUT_FILENO, "\n", 1);
-      write(STDOUT_FILENO, "$ ", 2);
-      write(STDOUT_FILENO, rl_line_buffer, strlen(rl_line_buffer));
-      rl_on_new_line();
-      for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
-      free(matches);
-      return NULL;
-      
-    } else {                                // 1st tab
-      fprintf(stderr, "\x07");
-      return NULL;
-    }    
+      return matches;  // let the hook handle display
+} else {
+    fprintf(stderr, "\x07");
+    return NULL;
+} 
   }
   return matches;
+}
+
+void my_display_matches(char** matches, int num_matches, int max_length) {
+  struct stat buf;
+  write(STDOUT_FILENO, "\n", 1);
+  for (int h = 1; matches[h] != NULL; h++) {
+      write(STDOUT_FILENO, matches[h], strlen(matches[h]));
+      char full_path[2048];
+      snprintf(full_path, sizeof(full_path), "./%s", matches[h]);
+      stat(full_path, &buf);
+      if (S_ISDIR(buf.st_mode)) write(STDOUT_FILENO, "/", 1);
+      write(STDOUT_FILENO, "  ", 2);
+  }
+  write(STDOUT_FILENO, "\n", 1);
+  rl_on_new_line();
+  rl_redisplay();
 }
