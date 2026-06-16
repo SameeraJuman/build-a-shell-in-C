@@ -91,6 +91,7 @@ int main(int argc, char *argv[]) {
         }
         
     } else if(strncmp(command, "complete ", 9) == 0) {       // complete cmd
+      int arg_index = 0;
       parseCommand(command, launch_parse, args, &arg_index);
       if (strcmp(args[1], complete_flag[0]) == 0) {
         printf("complete: %s: no completion specification\n", args[2]);
