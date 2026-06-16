@@ -21,7 +21,7 @@ void my_display_matches(char** matches, int num_matches, int max_length);
 
 char launch_parse[1024];
 char* args[100];
-char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd"};
+char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -29,10 +29,10 @@ int main(int argc, char *argv[]) {
   setbuf(stdout, NULL);
 
   // tab completion
-  rl_attempted_completion_function = my_completion;  // when the user presses TAB, call MY function to find completions
+  rl_attempted_completion_function = my_completion;  // when the user presses TAB, call MY func. to find completions
   rl_bind_key('\t', rl_complete);  // TAB is the key that triggers it
   rl_completion_append_character = ' ';    
-  rl_completion_display_matches_hook = my_display_matches;
+  rl_completion_display_matches_hook = my_display_matches;  // showing mult. matches, call this func.
 
   while(1) {
     int foundB = 0;
@@ -182,6 +182,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+// MARK: CUSTOM FUNCT.
 void parseCommand(char* command, char* launch_parse, char** args, int* arg_index) {
   strcpy(launch_parse, command);
   args[0] = launch_parse;
@@ -419,20 +420,18 @@ char** my_completion(const char* user_input, int start, int end) {
   if (g > 1) {
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
-      return matches;  // let the hook handle display
-} else {                             // 1st tab
-  // Check if matches[0] (the common prefix) is longer than user_input
-  if (strlen(matches[0]) > strlen(user_input)) {
-      // There's a common prefix to complete — let readline insert it
-      return matches;
-  } else {
-      // No common prefix beyond what's typed — ring bell
-      fprintf(stderr, "\x07");
-      for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
-      free(matches);
-      return NULL;
-      }
-    }
+      return matches;  
+    } else {                             // 1st tab
+      // check if matches[0] (the common prefix) is longer than user_input
+      if (strlen(matches[0]) > strlen(user_input)) {
+          return matches;
+      } else {
+          fprintf(stderr, "\x07");
+          for (int h = 0; matches[h] != NULL; h++) free(matches[h]);
+          free(matches);
+          return NULL;
+          }
+        }
   }
   return matches;
 }
