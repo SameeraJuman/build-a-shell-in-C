@@ -104,8 +104,10 @@ int main(int argc, char *argv[]) {
             continue;
           } else {
             clean_args[b] = args[l];
+            b++
           }
         }
+        clean_args[b] = NULL;
         if (strcmp(clean_args[1], "-C") == 0) {  
           complete_path[compl_counter] = strdup(clean_args[2]);   // store path
           complete_cmd[compl_counter] = strdup(clean_args[3]);    // store cmd
