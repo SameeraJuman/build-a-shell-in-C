@@ -26,6 +26,7 @@ char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
 char* complete_cmd[1024];
 char* complete_path[1024];
 int compl_counter = 0;
+clean_args[1024];
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -97,11 +98,18 @@ int main(int argc, char *argv[]) {
         int arg_index = 0;
         bool foundC = false;
         parseCommand(command, launch_parse, args, &arg_index);
-        if (strcmp(args[1], "-C") == 0) {  
-          complete_path[compl_counter] = strdup(args[2]);   // store path
-          complete_cmd[compl_counter] = strdup(args[3]);    // store cmd
+        for (int l = 0; args[l] != NULL; l++) {
+          if (strlen(args[l]) == 0) {
+            continue;
+          } else {
+            clean_args[l] = args[l];
+          }
+        }
+        if (strcmp(clean_args[1], "-C") == 0) {  
+          complete_path[compl_counter] = strdup(clean_args[2]);   // store path
+          complete_cmd[compl_counter] = strdup(clean_args[3]);    // store cmd
           compl_counter++;
-        } else if (strcmp(args[1], "-p") == 0) {    
+        } else if (strcmp(clean_args[1], "-p") == 0) {    
           for (int c = 0; complete_cmd[c] != NULL; c++) {
             if (strcmp(args[2], complete_cmd[c]) == 0) {
               foundC = true;
@@ -109,7 +117,7 @@ int main(int argc, char *argv[]) {
             }
           }
           if (!foundC) {
-            printf("complete: %s: no completion specification\n", args[2]);
+            printf("complete: %s: no completion specification\n", clean_args[2]);
           }
         }   
 
