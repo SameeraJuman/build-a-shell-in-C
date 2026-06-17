@@ -26,7 +26,7 @@ char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
 char* complete_cmd[1024];
 char* complete_path[1024];
 int compl_counter = 0;
-clean_args[1024];
+char* clean_args[1024];
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
