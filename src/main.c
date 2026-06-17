@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
             continue;
           } else {
             clean_args[b] = args[l];
-            b++
+            b++;
           }
         }
         clean_args[b] = NULL;
