@@ -99,16 +99,16 @@ int main(int argc, char *argv[]) {
         int b = 0;
         bool foundC = false;
         parseCommand(command, launch_parse, args, &arg_index);
-        for (int l = 0; args[l] != NULL; l++) {
+        for (int l = 0; args[l] != NULL; l++) {   
           if (strlen(args[l]) == 0) {
             continue;
           } else {
-            clean_args[b] = args[l];
+            clean_args[b] = args[l];    // use this array
             b++;
           }
         }
         clean_args[b] = NULL;
-        if (strcmp(clean_args[1], "-C") == 0) {  
+        if (strcmp(clean_args[1], "-C") == 0) {     // registered completer scripts
           complete_path[compl_counter] = strdup(clean_args[2]);   // store path
           complete_cmd[compl_counter] = strdup(clean_args[3]);    // store cmd
           compl_counter++;
@@ -327,6 +327,9 @@ char* completion_generator(const char* user_input, int state) {
   static char dir_path[2048];
   char* fn;
   struct stat buf;
+  char* last_space;
+  char curr_cmd[1024];
+  char* curr_path = NULL;
   
   if (state == 0) {   // if new word, then start from starting
     list_index = 0;
@@ -339,6 +342,40 @@ char* completion_generator(const char* user_input, int state) {
   }
 
   if (strchr(rl_line_buffer, ' ') != NULL) {
+    last_space = strchr(rl_line_buffer, ' ');      // is completer stored?
+    strncpy(curr_cmd, rl_line_buffer, last_space - rl_line_buffer);
+    curr_cmd[last_space - rl_line_buffer] = '\0';
+    for (int i = 0; complete_cmd[i] != NULL; i++) {
+      if (strcmp(curr_cmd, complete_cmd[i]) == 0) {
+        curr_path = complete_path[i];
+      }
+    }
+    // forking process w pipe
+    if (curr_path != NULL) {
+    char buf[100];
+    int pipefd[2];    // create pipe
+    pipe(pipefd);
+    pid_t my_pid = fork();
+    if (my_pid == 0) {        // child, writing
+        close(pipefd[0]);        // no reading
+        dup2(pipefd[1], 1);    // redirect file to stdout 
+        close(pipefd[1]);
+        char* exec_args[] = {curr_path, NULL};
+        execvp(curr_path, exec_args);
+      } else {                        // main/parent, reading
+          close(pipefd[1]);
+          int bytes = read(pipefd[0], buf, sizeof(buf) - 1);
+          waitpid(my_pid, NULL, 0);
+          close(pipefd[0]);
+          if (bytes > 0) {
+            buf[bytes] = '\0';
+            char* newline = strchr(buf, '\n');
+            if (newline) *newline = '\0';
+            return strdup(buf);
+          }
+      }
+    }
+
     if ((last_slash = strrchr(user_input, '/')) != NULL) {  // NESTED FILE
       strcpy(p2, user_input);
       last_slash = strrchr(p2, '/');
