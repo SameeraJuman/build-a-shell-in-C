@@ -330,8 +330,10 @@ char* completion_generator(const char* user_input, int state) {
   char* last_space;
   char curr_cmd[1024];
   char* curr_path = NULL;
+  static char* stored_result = NULL;
   
   if (state == 0) {   // if new word, then start from starting
+    stored_result = NULL;
     list_index = 0;
     len = strlen(user_input);
     strcpy(p, getenv("PATH"));    // PATH
@@ -352,28 +354,36 @@ char* completion_generator(const char* user_input, int state) {
     }
     // forking process w pipe
     if (curr_path != NULL) {
-    char buf[100];
-    int pipefd[2];    // create pipe
-    pipe(pipefd);
-    pid_t my_pid = fork();
-    if (my_pid == 0) {        // child, writing
-        close(pipefd[0]);        // no reading
-        dup2(pipefd[1], 1);    // redirect file to stdout 
-        close(pipefd[1]);
-        char* exec_args[] = {curr_path, NULL};
-        execvp(curr_path, exec_args);
-      } else {                        // main/parent, reading
-          close(pipefd[1]);
-          int bytes = read(pipefd[0], buf, sizeof(buf) - 1);
-          waitpid(my_pid, NULL, 0);
-          close(pipefd[0]);
-          if (bytes > 0) {
-            buf[bytes] = '\0';
-            char* newline = strchr(buf, '\n');
-            if (newline) *newline = '\0';
-            return strdup(buf);
+      if (state == 0) {
+        char buf[100];
+        int pipefd[2];    // create pipe
+        pipe(pipefd);
+        pid_t my_pid = fork();
+        if (my_pid == 0) {        // child, writing
+            close(pipefd[0]);        // no reading
+            dup2(pipefd[1], 1);    // redirect file to stdout 
+            close(pipefd[1]);
+            char* exec_args[] = {curr_path, NULL};
+            execvp(curr_path, exec_args);
+          } else {                        // main/parent, reading
+              close(pipefd[1]);
+              int bytes = read(pipefd[0], buf, sizeof(buf) - 1);
+              waitpid(my_pid, NULL, 0);
+              close(pipefd[0]);
+              if (bytes > 0) {
+                buf[bytes] = '\0';
+                char* newline = strchr(buf, '\n');
+                if (newline) *newline = '\0';
+                return strdup(buf);
+              }
           }
       }
+      if (stored_result != NULL) {
+        char* result = stored_result;
+        stored_result = NULL;  // clear so next call returns NULL
+        return result;
+    }
+    return NULL;
     }
 
     if ((last_slash = strrchr(user_input, '/')) != NULL) {  // NESTED FILE
