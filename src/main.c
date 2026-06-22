@@ -363,7 +363,7 @@ char* completion_generator(const char* user_input, int state) {
     // forking process w pipe
     if (curr_path != NULL) {
       if (state == 0 && comp_result_count == 0) {
-        char pipe_buf[100];
+        char pipe_buf[4096];
         int pipefd[2];    // create pipe
         pipe(pipefd);
         pid_t my_pid = fork();
@@ -418,11 +418,11 @@ char* completion_generator(const char* user_input, int state) {
                 line = strtok(NULL, "\n");
               }
           }
-          if (comp_result_index < comp_result_count) {
-            return strdup(comp_results[comp_result_index++]);
-          }
-          return NULL;
       }
+      if (comp_result_index < comp_result_count) {
+        return strdup(comp_results[comp_result_index++]);
+      }
+      return NULL;
     }
 
     if ((last_slash = strrchr(user_input, '/')) != NULL) {  // NESTED FILE
