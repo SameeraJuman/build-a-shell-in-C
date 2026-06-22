@@ -22,10 +22,11 @@ void my_display_matches(char** matches, int num_matches, int max_length);
 // MARK: variables
 char launch_parse[1024];
 char* args[100];
-char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete"};
+char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete", "jobs"};
 char* complete_cmd[1024];
 char* complete_path[1024];
 int compl_counter = 0;
+char* bg_jobs[1024];
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -186,6 +187,8 @@ int main(int argc, char *argv[]) {
         } else {
             chdir(path);
         }
+        
+    } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
         
     } else {                              // launching external programs
         // searching for executables
