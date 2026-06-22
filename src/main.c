@@ -330,7 +330,7 @@ char* completion_generator(const char* user_input, int state) {
   char* last_space;
   char curr_cmd[1024];
   char* curr_path = NULL;
-  static char* comp_result[1024];
+  static char* comp_results[1024];
   static int comp_result_count = 0;
   static int comp_result_index = 0;
   
@@ -423,12 +423,6 @@ char* completion_generator(const char* user_input, int state) {
               return NULL;
           }
       }
-      if (stored_result != NULL) {
-        char* result = stored_result;
-        stored_result = NULL;  // clear so next call returns NULL
-        return result;
-    }
-    return NULL;
     }
 
     if ((last_slash = strrchr(user_input, '/')) != NULL) {  // NESTED FILE
