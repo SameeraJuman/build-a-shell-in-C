@@ -363,8 +363,28 @@ char* completion_generator(const char* user_input, int state) {
             close(pipefd[0]);        // no reading
             dup2(pipefd[1], 1);    // redirect file to stdout 
             close(pipefd[1]);
-            char* exec_args[] = {curr_path, NULL};
+
+            // build the word immediately before user_input in rl_line_buffer
+            char prev_word[1024] = "";
+            char line_copy[1024];
+            strcpy(line_copy, rl_line_buffer);
+            char* tok = strtok(line_copy, " ");  // find the word before user_input
+            char* prev = NULL;
+            char* found = NULL;
+            while(tok !- NULL) {
+              char* next = strtok(NULL, " ");
+              if (next == NULL) {
+                if (prev != NULL) {
+                  strcpy(prev_word, prev);
+                  break;
+                }
+              }
+              prev = tok;
+              tok = next;
+            }
+            char* exec_args[] = {curr_path, curr_cmd, (char*)user_input, prev_word, NULL};
             execvp(curr_path, exec_args);
+            _exit(1);
           } else {                        // main/parent, reading
               close(pipefd[1]);
               int bytes = read(pipefd[0], buf, sizeof(buf) - 1);
