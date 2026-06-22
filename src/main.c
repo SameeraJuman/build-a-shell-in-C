@@ -330,11 +330,19 @@ char* completion_generator(const char* user_input, int state) {
   char* last_space;
   char curr_cmd[1024];
   char* curr_path = NULL;
-  static char* stored_result = NULL;
+  static char* comp_result[1024];
+  static int comp_result_count = 0;
+  static int comp_result_index = 0;
   
   if (state == 0) {   // if new word, then start from starting
-    stored_result = NULL;
+    for (int i = 0; i < comp_result_count; i++) {
+      free(comp_results[i]);
+      comp_results[i] = NULL;
+    }
+    comp_result_count = 0;
+    comp_result_index = 0;
     list_index = 0;
+    
     len = strlen(user_input);
     strcpy(p, getenv("PATH"));    // PATH
     token = strtok(p, ":");
@@ -355,7 +363,7 @@ char* completion_generator(const char* user_input, int state) {
     // forking process w pipe
     if (curr_path != NULL) {
       if (state == 0) {
-        char buf[100];
+        char pipe_buf[100];
         int pipefd[2];    // create pipe
         pipe(pipefd);
         pid_t my_pid = fork();
@@ -392,17 +400,27 @@ char* completion_generator(const char* user_input, int state) {
             char* exec_args[] = {curr_path, curr_cmd, (char*)user_input, prev_word, NULL};
             execvp(curr_path, exec_args);
             _exit(1);
+
           } else {                        // main/parent, reading
               close(pipefd[1]);
-              int bytes = read(pipefd[0], buf, sizeof(buf) - 1);
+              int total = 0;
+              int bytes;
+              while ((bytes = read(pipefd[0], pipe_buf + total, sizeof(pipe_buf) - 1 - total)) > 0) {
+                total += bytes;
+              }
               waitpid(my_pid, NULL, 0);
               close(pipefd[0]);
-              if (bytes > 0) {
-                buf[bytes] = '\0';
-                char* newline = strchr(buf, '\n');
-                if (newline) *newline = '\0';
-                return strdup(buf);
+              pipe_buf[total] = '\0';
+
+              char* line = strtok(pipe_buf, "\n");
+              while (line != NULL && comp_result_count < 1024) {
+                comp_results[comp_result_count++] = strdup(line);
+                line = strtok(NULL, "\n");
               }
+              if (comp_result_index < comp_result_count) {
+                return strdup(comp_results[comp_result_index++]);
+              }
+              return NULL;
           }
       }
       if (stored_result != NULL) {
