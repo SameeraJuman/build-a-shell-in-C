@@ -362,7 +362,7 @@ char* completion_generator(const char* user_input, int state) {
     }
     // forking process w pipe
     if (curr_path != NULL) {
-      if (state == 0) {
+      if (state == 0 && comp_result_count == 0) {
         char pipe_buf[100];
         int pipefd[2];    // create pipe
         pipe(pipefd);
@@ -417,11 +417,11 @@ char* completion_generator(const char* user_input, int state) {
                 comp_results[comp_result_count++] = strdup(line);
                 line = strtok(NULL, "\n");
               }
-              if (comp_result_index < comp_result_count) {
-                return strdup(comp_results[comp_result_index++]);
-              }
-              return NULL;
           }
+          if (comp_result_index < comp_result_count) {
+            return strdup(comp_results[comp_result_index++]);
+          }
+          return NULL;
       }
     }
 
