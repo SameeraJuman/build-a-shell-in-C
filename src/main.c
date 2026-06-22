@@ -197,7 +197,15 @@ int main(int argc, char *argv[]) {
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
         for (int i = 0; i < job_counter; i++) {
-          printf("[%d]+  %-24s%s \n", bg_jobs[i].job_num, bg_jobs[i].status, bg_jobs[i].command);
+          char marker;
+          if (i == job_counter - 1) {
+            marker = '+';   // most recent
+          } else if (i == job_counter - 2) {
+            marker = '-';   // second most recent
+          } else {
+            marker = ' ';   // all others
+          }
+          printf("[%d]%c  %-24s%s \n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
         }
 
     } else {                              // launching external programs
@@ -242,7 +250,7 @@ int main(int argc, char *argv[]) {
 
           } if (my_pid != 0) {      // main/parent
               if (bg) {
-                printf("[1] %d\n", my_pid);   // print child pid
+                printf("[%d] %d\n", job_counter + 1, my_pid);   // print child pid
                 bg_jobs[job_counter].job_num = job_counter + 1;
                 bg_jobs[job_counter].pid = my_pid;
                 strcpy(bg_jobs[job_counter].command, command);
