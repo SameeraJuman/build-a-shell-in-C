@@ -30,7 +30,7 @@ typedef struct {
   int job_num;    // starts at 1
   pid_t pid;
   char command[1024];
-  char status[16]
+  char status[16];
 } Jobs;
 Jobs bg_jobs[1024];
 int job_counter = 0;
