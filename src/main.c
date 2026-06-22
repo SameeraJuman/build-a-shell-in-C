@@ -112,6 +112,22 @@ int main(int argc, char *argv[]) {
           complete_path[compl_counter] = strdup(clean_args[2]);   // store path
           complete_cmd[compl_counter] = strdup(clean_args[3]);    // store cmd
           compl_counter++;
+        } else if (strcmp(clean_args[1], "-r") == 0) {
+          for (int c = 0; c < compl_counter; c++) {
+            if (strcmp(clean_args[2], complete_cmd[c]) == 0) {
+              free(complete_cmd[c]);
+              free(complete_path[c]);
+              // shift everything left to fill the gap
+              for (int d = c; d < compl_counter - 1; d++) {
+                complete_cmd[d] = complete_cmd[d+1];
+                complete_path[d] = complete_path[d+1];
+              }
+              complete_cmd[compl_counter - 1] = NULL;
+              complete_path[compl_counter - 1] = NULL;
+              compl_counter--;
+              break;
+            }
+          }
         } else if (strcmp(clean_args[1], "-p") == 0) {    
           for (int c = 0; complete_cmd[c] != NULL; c++) {
             if (strcmp(clean_args[2], complete_cmd[c]) == 0) {
