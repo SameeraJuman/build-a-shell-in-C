@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
 
           } if (my_pid != 0) {      // main/parent
               if (bg) {
-                printf("[1] %ld\n", getpid());
+                printf("[1] %d\n", my_pid);
                 continue;
             } else {
               waitpid(my_pid, NULL, 0);
