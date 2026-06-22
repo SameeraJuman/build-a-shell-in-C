@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
         for (int i = 0; i < job_counter; i++) {
-          printf("[%d]+  %-24s%s &\n", bg_jobs[i].job_num, bg_jobs[i].status, bg_jobs[i].command);
+          printf("[%d]+  %-24s%s \n", bg_jobs[i].job_num, bg_jobs[i].status, bg_jobs[i].command);
         }
 
     } else {                              // launching external programs
