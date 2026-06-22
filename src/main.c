@@ -26,7 +26,14 @@ char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete", "jobs"};
 char* complete_cmd[1024];
 char* complete_path[1024];
 int compl_counter = 0;
-char* bg_jobs[1024];
+typedef struct {
+  int job_num;    // starts at 1
+  pid_t pid;
+  char command[1024];
+  char status[16]
+} Jobs;
+Jobs bg_jobs[1024];
+int job_counter = 0;
 
 // MAIN METHOD
 int main(int argc, char *argv[]) {
@@ -189,7 +196,9 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
-      
+        for (int i = 0; i < job_counter; i++) {
+          printf("[%d]+  %-24s%s &\n", bg_jobs[i].job_num, bg_jobs[i].status, bg_jobs[i].command);
+        }
 
     } else {                              // launching external programs
         // searching for executables
@@ -229,18 +238,21 @@ int main(int argc, char *argv[]) {
               int fd2 = dup2(fd, fd_num);    // redirect stdout or stderr
               close(fd);
             }
-            
             execvp(filename, args);
 
           } if (my_pid != 0) {      // main/parent
               if (bg) {
-                printf("[1] %d\n", my_pid);
+                printf("[1] %d\n", my_pid);   // print child pid
+                bg_jobs[job_counter].job_num = job_counter + 1;
+                bg_jobs[job_counter].pid = my_pid;
+                strcpy(bg_jobs[job_counter].command, command);
+                strcpy(bg_jobs[job_counter].status, "Running");
+                job_counter++;
                 continue;
             } else {
               waitpid(my_pid, NULL, 0);
             }
-
-            }
+          }
 
         } else {
             printf("%s: command not found\n", command);       // print error msg 
