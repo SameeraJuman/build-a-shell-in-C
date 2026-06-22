@@ -382,6 +382,13 @@ char* completion_generator(const char* user_input, int state) {
               prev = tok;
               tok = next;
             }
+
+            // COMP_LINE and COMP_POINT 
+            char comp_point_str[32];
+            snprintf(comp_point_str, sizeof(comp_point_str), "%zu", strlen(rl_line_buffer));
+            setenv("COMP_LINE", rl_line_buffer, 1);
+            setenv("COMP_POINT", comp_point_str, 1);
+
             char* exec_args[] = {curr_path, curr_cmd, (char*)user_input, prev_word, NULL};
             execvp(curr_path, exec_args);
             _exit(1);
