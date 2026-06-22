@@ -189,14 +189,23 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
-        
+      
+
     } else {                              // launching external programs
         // searching for executables
         int arg_index = 0;
         int fd_num = 0;
         int append_mode;
         int flags;
+        bool bg = false;
         parseCommand(command, launch_parse, args, &arg_index);
+        for (int i = 0; args[i] != NULL; i++) {       // taking out &
+          if (strcmp(args[i], "&") == 0) {
+            args[i] = NULL;
+            bg = true;
+          } 
+        }
+
         char* redirect_file = findRedirect(args, &fd_num, &append_mode);
         if (append_mode) {
           flags = O_WRONLY | O_CREAT | O_APPEND;
@@ -224,7 +233,13 @@ int main(int argc, char *argv[]) {
             execvp(filename, args);
 
           } if (my_pid != 0) {      // main/parent
+              if (bg) {
+                printf("[1] %ld\n", getppid());
+                continue;
+            } else {
               waitpid(my_pid, NULL, 0);
+            }
+
             }
 
         } else {
