@@ -371,7 +371,7 @@ char* completion_generator(const char* user_input, int state) {
             char* tok = strtok(line_copy, " ");  // find the word before user_input
             char* prev = NULL;
             char* found = NULL;
-            while(tok !- NULL) {
+            while(tok != NULL) {
               char* next = strtok(NULL, " ");
               if (next == NULL) {
                 if (prev != NULL) {
