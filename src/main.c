@@ -196,6 +196,13 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
+        for (int i = 0l i < job_counter; i++) {     // check which jobs exited
+          int status;
+          pid_t result = waitpid(bg_jobs[i].pid, &status, WNOHANG);
+          if (result > 0 && WIFEXITED(status)) {
+            strcpy(bg_jobs[i].status, "Done");
+          }
+        }
         for (int i = 0; i < job_counter; i++) {
           char marker;
           if (i == job_counter - 1) {
@@ -205,7 +212,22 @@ int main(int argc, char *argv[]) {
           } else {
             marker = ' ';   // all others
           }
-          printf("[%d]%c  %-24s%s \n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
+          if (strcmp(bg_jobs[i].status, "Done") == 0) {
+            printf("[%d]%c  %-24s%s\n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
+          } else {
+            printf("[%d]%c  %-24s%s \n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
+          }
+        }
+        int i = 0;
+        while (i < job_counter) {
+          if (strcmp(bg_jobs[i].status, "Done") == 0) {
+              for (int d = i; d < job_counter - 1; d++) {
+                  bg_jobs[d] = bg_jobs[d+1];
+              }
+              job_counter--;
+          } else {
+              i++;
+          }
         }
 
     } else {                              // launching external programs
