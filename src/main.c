@@ -198,7 +198,6 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
-        reapJobs();
         for (int i = 0; i < job_counter; i++) {     // check which jobs exited
           int status;
           pid_t result = waitpid(bg_jobs[i].pid, &status, WNOHANG);
