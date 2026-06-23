@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
   rl_completion_display_matches_hook = my_display_matches;  // showing mult. matches, call this func.
 
   while(1) {
+    reapJobs();   // check for completed jobs before each prompt
     int foundB = 0;
     int foundE = 0;
 
@@ -196,6 +197,7 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
+        reapJobs();
         for (int i = 0; i < job_counter; i++) {     // check which jobs exited
           int status;
           pid_t result = waitpid(bg_jobs[i].pid, &status, WNOHANG);
@@ -654,4 +656,32 @@ void my_display_matches(char** matches, int num_matches, int max_length) {
   write(STDOUT_FILENO, "\n", 1);
   rl_on_new_line();
   rl_redisplay();
+}
+
+void reapJobs() {
+  for (int i = 0; i < job_counter; i++) {   // check for exited jobs
+      int status;
+      pid_t result = waitpid(bg_jobs[i].pid, &status, WNOHANG);
+      if (result > 0 && WIFEXITED(status)) {
+          strcpy(bg_jobs[i].status, "Done");
+      }
+  }
+
+  int i = 0;      // print and remove Done jobs
+  while (i < job_counter) {
+      if (strcmp(bg_jobs[i].status, "Done") == 0) {
+          char marker;
+          if (i == job_counter - 1) marker = '+';
+          else if (i == job_counter - 2) marker = '-';
+          else marker = ' ';
+          printf("[%d]%c  %-24s%s\n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
+          // shift left
+          for (int d = i; d < job_counter - 1; d++) {
+              bg_jobs[d] = bg_jobs[d+1];
+          }
+          job_counter--;
+      } else {
+          i++;
+      }
+  }
 }
