@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
           if (strcmp(bg_jobs[i].status, "Done") == 0) {
             printf("[%d]%c  %-24s%s\n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
           } else {
-            printf("[%d]%c  %-24s%s \n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
+            printf("[%d]%c  %-24s%s &\n", bg_jobs[i].job_num, marker, bg_jobs[i].status, bg_jobs[i].command);
           }
         }
         int i = 0;
@@ -275,7 +275,14 @@ int main(int argc, char *argv[]) {
                 printf("[%d] %d\n", job_counter + 1, my_pid);   // print child pid
                 bg_jobs[job_counter].job_num = job_counter + 1;
                 bg_jobs[job_counter].pid = my_pid;
-                strcpy(bg_jobs[job_counter].command, command);
+                // strip trailing " &" before storing
+                char stored_cmd[1024];
+                strcpy(stored_cmd, command);
+                int cmd_len = strlen(stored_cmd);
+                if (cmd_len >= 2 && stored_cmd[cmd_len-1] == '&' && stored_cmd[cmd_len-2] == ' ') {
+                    stored_cmd[cmd_len-2] = '\0';
+                }
+                strcpy(bg_jobs[job_counter].command, stored_cmd);
                 strcpy(bg_jobs[job_counter].status, "Running");
                 job_counter++;
                 continue;
