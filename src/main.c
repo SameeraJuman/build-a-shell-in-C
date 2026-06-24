@@ -19,7 +19,7 @@ int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
 void my_display_matches(char** matches, int num_matches, int max_length);
 void reapJobs();
-int findPipe(char** args)
+int findPipe(char** args);
 
 // MARK: variables
 char launch_parse[1024];
