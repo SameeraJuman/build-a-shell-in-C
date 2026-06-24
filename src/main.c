@@ -279,6 +279,8 @@ int main(int argc, char *argv[]) {
             chdir(path);
         }
         
+    } else if(strncmp(command, "history ", 8) == 0) {
+      
     } else if (strcmp(command, "jobs") == 0) {   // jobs cmd
         for (int i = 0; i < job_counter; i++) {     // check which jobs exited
           int status;
