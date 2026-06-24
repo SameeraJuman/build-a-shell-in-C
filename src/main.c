@@ -66,57 +66,81 @@ int main(int argc, char *argv[]) {
     parseCommand(command, launch_parse, args, &arg_index);
     int pipe_index = findPipe(args);
     if (pipe_index != -1) {
-        args[pipe_index] = NULL;
-        char** left_args = args;
-        char** right_args = args + pipe_index + 1;
+        // split args into array of commands
+        char** cmds[100];
+        int cmd_count = 0;
+        int start = 0;
 
-        int pipefd[2];
-        pipe(pipefd);
-
-        pid_t left_pid = fork();
-        if (left_pid == 0) {
-            close(pipefd[0]);
-            dup2(pipefd[1], STDOUT_FILENO);
-            close(pipefd[1]);
-            int is_builtin = 0;
-            int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
-            for (int i = 0; i < length; i++) {
-                if (strcmp(left_args[0], builtin_cmd[i]) == 0) { is_builtin = 1; break; }
+        for (int i = 0; args[i] != NULL; i++) {
+            if (strcmp(args[i], "|") == 0) {
+                args[i] = NULL;
+                cmds[cmd_count++] = args + start;
+                start = i + 1;
             }
-            if (is_builtin) { execBuiltin(left_args); _exit(0); }
-            else {
-                char left_file[1024], left_p[2048];
-                if (findPath(left_args[0], left_file, left_p)) execvp(left_file, left_args);
-                _exit(1);
+        }
+        cmds[cmd_count++] = args + start;  // last command
+
+        // create pipes: need (cmd_count - 1) pipes
+        int pipefds[100][2];
+        for (int i = 0; i < cmd_count - 1; i++) {
+            pipe(pipefds[i]);
+        }
+
+        pid_t pids[100];
+        int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+
+        for (int i = 0; i < cmd_count; i++) {
+            pids[i] = fork();
+            if (pids[i] == 0) {   // child
+                // connect stdin to previous pipe (not for first command)
+                if (i > 0) {
+                    dup2(pipefds[i-1][0], STDIN_FILENO);
+                }
+                // connect stdout to next pipe (not for last command)
+                if (i < cmd_count - 1) {
+                    dup2(pipefds[i][1], STDOUT_FILENO);
+                }
+                // close all pipe fds in child
+                for (int j = 0; j < cmd_count - 1; j++) {
+                    close(pipefds[j][0]);
+                    close(pipefds[j][1]);
+                }
+
+                // check if builtin
+                int is_builtin = 0;
+                for (int b = 0; b < length; b++) {
+                    if (strcmp(cmds[i][0], builtin_cmd[b]) == 0) {
+                        is_builtin = 1; break;
+                    }
+                }
+                if (is_builtin) {
+                    execBuiltin(cmds[i]);
+                    _exit(0);
+                } else {
+                    char cmd_file[1024], cmd_p[2048];
+                    if (findPath(cmds[i][0], cmd_file, cmd_p)) {
+                        execvp(cmd_file, cmds[i]);
+                    } else {
+                        printf("%s: command not found\n", cmds[i][0]);
+                    }
+                    _exit(1);
+                }
             }
         }
 
-        pid_t right_pid = fork();
-        if (right_pid == 0) {
-            close(pipefd[1]);
-            dup2(pipefd[0], STDIN_FILENO);
-            close(pipefd[0]);
-            int is_builtin = 0;
-            int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
-            for (int i = 0; i < length; i++) {
-                if (strcmp(right_args[0], builtin_cmd[i]) == 0) { is_builtin = 1; break; }
-            }
-            if (is_builtin) { execBuiltin(right_args); _exit(0); }
-            else {
-                char right_file[1024], right_p[2048];
-                if (findPath(right_args[0], right_file, right_p)) execvp(right_file, right_args);
-                _exit(1);
-            }
+        // parent: close all pipe fds
+        for (int i = 0; i < cmd_count - 1; i++) {
+            close(pipefds[i][0]);
+            close(pipefds[i][1]);
         }
-
-        close(pipefd[0]);
-        close(pipefd[1]);
-        waitpid(left_pid, NULL, 0);
-        waitpid(right_pid, NULL, 0);
+        // wait for all children
+        for (int i = 0; i < cmd_count; i++) {
+            waitpid(pids[i], NULL, 0);
+        }
         free(command);
         continue;
     }
-    
+
     if(strcmp(command, "exit") == 0) {                  // exit cmd
       break;
 
