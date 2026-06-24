@@ -20,6 +20,7 @@ char** my_completion(const char* user_input, int start, int end);    // multiple
 void my_display_matches(char** matches, int num_matches, int max_length);
 void reapJobs();
 int findPipe(char** args);
+void execBuiltin(char** b_args);
 
 // MARK: variables
 char launch_parse[1024];
@@ -249,52 +250,78 @@ int main(int argc, char *argv[]) {
         }
 
         // check for pipe
-      int pipe_index = findPipe(args);
-      if (pipe_index != -1) {
-          // split into two commands
-          args[pipe_index] = NULL;        // terminate left command
-          char** left_args = args;        // left of pipe
-          char** right_args = args + pipe_index + 1;  // right of pipe
+        int pipe_index = findPipe(args);
+        if (pipe_index != -1) {
+            args[pipe_index] = NULL;
+            char** left_args = args;
+            char** right_args = args + pipe_index + 1;
 
-          // find executables for both
-          char left_file[1024], left_p[2048];
-          char right_file[1024], right_p[2048];
-          int left_found = findPath(left_args[0], left_file, left_p);
-          int right_found = findPath(right_args[0], right_file, right_p);
+            int pipefd[2];
+            pipe(pipefd);
 
-          if (!left_found || !right_found) {
-              printf("%s: command not found\n", !left_found ? left_args[0] : right_args[0]);
-          } else {
-              int pipefd[2];
-              pipe(pipefd);
+            // left child
+            pid_t left_pid = fork();
+            if (left_pid == 0) {
+                close(pipefd[0]);
+                dup2(pipefd[1], STDOUT_FILENO);
+                close(pipefd[1]);
 
-              pid_t left_pid = fork();
-              if (left_pid == 0) {        // left child: write to pipe
-                  close(pipefd[0]);
-                  dup2(pipefd[1], STDOUT_FILENO);
-                  close(pipefd[1]);
-                  execvp(left_file, left_args);
-                  _exit(1);
-              }
+                int is_builtin = 0;
+                int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+                for (int i = 0; i < length; i++) {
+                    if (strcmp(left_args[0], builtin_cmd[i]) == 0) {
+                        is_builtin = 1; break;
+                    }
+                }
+                if (is_builtin) {
+                    execBuiltin(left_args);
+                    _exit(0);
+                } else {
+                    char left_file[1024], left_p[2048];
+                    if (findPath(left_args[0], left_file, left_p)) {
+                        execvp(left_file, left_args);
+                    } else {
+                        printf("%s: command not found\n", left_args[0]);
+                    }
+                    _exit(1);
+                }
+            }
 
-              pid_t right_pid = fork();
-              if (right_pid == 0) {       // right child: read from pipe
-                  close(pipefd[1]);
-                  dup2(pipefd[0], STDIN_FILENO);
-                  close(pipefd[0]);
-                  execvp(right_file, right_args);
-                  _exit(1);
-              }
+            // right child
+            pid_t right_pid = fork();
+            if (right_pid == 0) {
+                close(pipefd[1]);
+                dup2(pipefd[0], STDIN_FILENO);
+                close(pipefd[0]);
 
-              // parent: close both ends and wait for both children
-              close(pipefd[0]);
-              close(pipefd[1]);
-              waitpid(left_pid, NULL, 0);
-              waitpid(right_pid, NULL, 0);
-          }
-          free(command);
-          continue;   // skip the rest of the loop
-      }
+                int is_builtin = 0;
+                int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+                for (int i = 0; i < length; i++) {
+                    if (strcmp(right_args[0], builtin_cmd[i]) == 0) {
+                        is_builtin = 1; break;
+                    }
+                }
+                if (is_builtin) {
+                    execBuiltin(right_args);
+                    _exit(0);
+                } else {
+                    char right_file[1024], right_p[2048];
+                    if (findPath(right_args[0], right_file, right_p)) {
+                        execvp(right_file, right_args);
+                    } else {
+                        printf("%s: command not found\n", right_args[0]);
+                    }
+                    _exit(1);
+                }
+            }
+
+            close(pipefd[0]);
+            close(pipefd[1]);
+            waitpid(left_pid, NULL, 0);
+            waitpid(right_pid, NULL, 0);
+            free(command);
+            continue;
+        }
 
         char* redirect_file = findRedirect(args, &fd_num, &append_mode);
         if (append_mode) {
@@ -742,4 +769,36 @@ int findPipe(char** args) {
       }
   }
   return -1;
+}
+
+void execBuiltin(char** b_args) {
+  if (strcmp(b_args[0], "echo") == 0) {
+      for (int v = 1; b_args[v] != NULL; v++) {
+          if (strlen(b_args[v]) == 0) continue;
+          if (v > 1) printf(" ");
+          printf("%s", b_args[v]);
+      }
+      printf("\n");
+  } else if (strcmp(b_args[0], "type") == 0) {
+      char* after_type = b_args[1];
+      int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+      int foundB = 0, foundE = 0;
+      for (int i = 0; i < length; i++) {
+          if (strcmp(after_type, builtin_cmd[i]) == 0) {
+              printf("%s is a shell builtin\n", after_type);
+              foundB = 1; foundE = 1;
+              break;
+          }
+      }
+      if (!foundE) {
+          char filename[1024], p[2048];
+          foundE = findPath(after_type, filename, p);
+          if (foundE) printf("%s is %s\n", after_type, filename);
+      }
+      if (!foundB && !foundE) printf("%s: not found\n", after_type);
+  } else if (strcmp(b_args[0], "pwd") == 0) {
+      char my_pwd[1024];
+      getcwd(my_pwd, sizeof(my_pwd));
+      printf("%s\n", my_pwd);
+  }
 }
