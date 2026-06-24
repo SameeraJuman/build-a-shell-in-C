@@ -25,7 +25,7 @@ void execBuiltin(char** b_args);
 // MARK: variables
 char launch_parse[1024];
 char* args[100];
-char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete", "jobs"};
+char* builtin_cmd[] = {"echo", "exit", "type", "pwd", "cd", "complete", "jobs", "history"};
 char* complete_cmd[1024];
 char* complete_path[1024];
 int compl_counter = 0;
