@@ -61,6 +61,62 @@ int main(int argc, char *argv[]) {
     }
     add_history(command);
 
+    // check for pipe before any builtin handling
+    int arg_index = 0;
+    parseCommand(command, launch_parse, args, &arg_index);
+    int pipe_index = findPipe(args);
+    if (pipe_index != -1) {
+        args[pipe_index] = NULL;
+        char** left_args = args;
+        char** right_args = args + pipe_index + 1;
+
+        int pipefd[2];
+        pipe(pipefd);
+
+        pid_t left_pid = fork();
+        if (left_pid == 0) {
+            close(pipefd[0]);
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[1]);
+            int is_builtin = 0;
+            int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+            for (int i = 0; i < length; i++) {
+                if (strcmp(left_args[0], builtin_cmd[i]) == 0) { is_builtin = 1; break; }
+            }
+            if (is_builtin) { execBuiltin(left_args); _exit(0); }
+            else {
+                char left_file[1024], left_p[2048];
+                if (findPath(left_args[0], left_file, left_p)) execvp(left_file, left_args);
+                _exit(1);
+            }
+        }
+
+        pid_t right_pid = fork();
+        if (right_pid == 0) {
+            close(pipefd[1]);
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);
+            int is_builtin = 0;
+            int length = sizeof(builtin_cmd) / sizeof(builtin_cmd[0]);
+            for (int i = 0; i < length; i++) {
+                if (strcmp(right_args[0], builtin_cmd[i]) == 0) { is_builtin = 1; break; }
+            }
+            if (is_builtin) { execBuiltin(right_args); _exit(0); }
+            else {
+                char right_file[1024], right_p[2048];
+                if (findPath(right_args[0], right_file, right_p)) execvp(right_file, right_args);
+                _exit(1);
+            }
+        }
+
+        close(pipefd[0]);
+        close(pipefd[1]);
+        waitpid(left_pid, NULL, 0);
+        waitpid(right_pid, NULL, 0);
+        free(command);
+        continue;
+    }
+    
     if(strcmp(command, "exit") == 0) {                  // exit cmd
       break;
 
