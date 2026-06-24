@@ -19,6 +19,7 @@ int comp(const void *a, const void *b);
 char** my_completion(const char* user_input, int start, int end);    // multiple matches
 void my_display_matches(char** matches, int num_matches, int max_length);
 void reapJobs();
+int findPipe(char** args)
 
 // MARK: variables
 char launch_parse[1024];
@@ -246,6 +247,54 @@ int main(int argc, char *argv[]) {
             bg = true;
           } 
         }
+
+        // check for pipe
+      int pipe_index = findPipe(args);
+      if (pipe_index != -1) {
+          // split into two commands
+          args[pipe_index] = NULL;        // terminate left command
+          char** left_args = args;        // left of pipe
+          char** right_args = args + pipe_index + 1;  // right of pipe
+
+          // find executables for both
+          char left_file[1024], left_p[2048];
+          char right_file[1024], right_p[2048];
+          int left_found = findPath(left_args[0], left_file, left_p);
+          int right_found = findPath(right_args[0], right_file, right_p);
+
+          if (!left_found || !right_found) {
+              printf("%s: command not found\n", !left_found ? left_args[0] : right_args[0]);
+          } else {
+              int pipefd[2];
+              pipe(pipefd);
+
+              pid_t left_pid = fork();
+              if (left_pid == 0) {        // left child: write to pipe
+                  close(pipefd[0]);
+                  dup2(pipefd[1], STDOUT_FILENO);
+                  close(pipefd[1]);
+                  execvp(left_file, left_args);
+                  _exit(1);
+              }
+
+              pid_t right_pid = fork();
+              if (right_pid == 0) {       // right child: read from pipe
+                  close(pipefd[1]);
+                  dup2(pipefd[0], STDIN_FILENO);
+                  close(pipefd[0]);
+                  execvp(right_file, right_args);
+                  _exit(1);
+              }
+
+              // parent: close both ends and wait for both children
+              close(pipefd[0]);
+              close(pipefd[1]);
+              waitpid(left_pid, NULL, 0);
+              waitpid(right_pid, NULL, 0);
+          }
+          free(command);
+          continue;   // skip the rest of the loop
+      }
 
         char* redirect_file = findRedirect(args, &fd_num, &append_mode);
         if (append_mode) {
@@ -684,4 +733,13 @@ void reapJobs() {
           i++;
       }
   }
+}
+
+int findPipe(char** args) {
+  for (int i = 0; args[i] != NULL; i++) {
+      if (strcmp(args[i], "|") == 0) {
+          return i;   // return index of the pipe
+      }
+  }
+  return -1;
 }
