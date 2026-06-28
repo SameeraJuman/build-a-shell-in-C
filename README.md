@@ -42,26 +42,32 @@ The main code is in `src/main.c`.
 - Print a prompt, handle invalid commands, REPL loop
 - `exit`, `echo`, `type`, `pwd`, `cd` builtins
 - Locate and run external programs via `PATH`
+
 **Navigation**
 - `cd` with absolute paths, relative paths, and `~` (home directory)
+
 **Quoting**
 - Single quotes, double quotes, backslash escaping inside and outside quotes
 - Executing quoted executables
+
 **Redirection**
 - Redirect stdout (`>`, `1>`) and stderr (`2>`)
 - Append stdout (`>>`, `1>>`) and stderr (`2>>`)
+
 **Command Completion**
 - TAB completion for builtins and executables
 - Completion with arguments
 - Bell on no match
 - Multiple match display (alphabetically sorted)
 - Partial completion to longest common prefix
+
 **Filename Completion**
 - File and directory completion
 - Nested path completion (e.g. `foo/bar/file`)
 - Trailing `/` appended for directories
 - Multiple matches with partial completion
 - Multi-argument tab completion
+
 **Programmable Completion**
 - `complete -C <script> <cmd>` to register a completer script
 - `complete -p <cmd>` to display registered specification
@@ -70,6 +76,7 @@ The main code is in `src/main.c`.
 - Passes command-line arguments to completer
 - Multiple completer candidates, longest common prefix
 - Handles missing specifications
+
 **Background Jobs**
 - `jobs` builtin with job numbers, status, and markers (`+`, `-`)
 - Starting background jobs with `&`
@@ -77,6 +84,7 @@ The main code is in `src/main.c`.
 - Reaping completed jobs (single and multiple)
 - Reaping before the next prompt
 - Recycling job numbers
+
 **Pipelines**
 - Dual-command pipelines (`cmd1 | cmd2`)
 - Pipelines with builtins
