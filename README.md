@@ -36,17 +36,54 @@ Note: This section is for stages 2 and beyond.
 # My Implementation
 The main code is in `src/main.c`.
 
-## Features implemented so far
-- `echo` with single and double quote support
-- Backslash escaping
-- `cd`, `pwd`, `exit`, `complete` builtins
-- External program execution via PATH lookup
-- Output redirection (`>`, `1>`, `2>`, `>>`, `1>>`, `2>>`)
-- Command history (up/down arrow navigation)
-- Tab completion for builtins and executables
-- Tab completion for files, directories, and nested paths (e.g. `foo/bar/file`)
-- Directory completion with trailing `/`
+### Completed extensions
+ 
+**Base**
+- Print a prompt, handle invalid commands, REPL loop
+- `exit`, `echo`, `type`, `pwd`, `cd` builtins
+- Locate and run external programs via `PATH`
+**Navigation**
+- `cd` with absolute paths, relative paths, and `~` (home directory)
+**Quoting**
+- Single quotes, double quotes, backslash escaping inside and outside quotes
+- Executing quoted executables
+**Redirection**
+- Redirect stdout (`>`, `1>`) and stderr (`2>`)
+- Append stdout (`>>`, `1>>`) and stderr (`2>>`)
+**Command Completion**
+- TAB completion for builtins and executables
+- Completion with arguments
 - Bell on no match
-- Multiple match display with alphabetical sorting
+- Multiple match display (alphabetically sorted)
 - Partial completion to longest common prefix
+**Filename Completion**
+- File and directory completion
+- Nested path completion (e.g. `foo/bar/file`)
+- Trailing `/` appended for directories
+- Multiple matches with partial completion
 - Multi-argument tab completion
+**Programmable Completion**
+- `complete -C <script> <cmd>` to register a completer script
+- `complete -p <cmd>` to display registered specification
+- `complete -r <cmd>` to unregister a completion
+- Forks completer script with `COMP_LINE` / `COMP_POINT` env vars
+- Passes command-line arguments to completer
+- Multiple completer candidates, longest common prefix
+- Handles missing specifications
+**Background Jobs**
+- `jobs` builtin with job numbers, status, and markers (`+`, `-`)
+- Starting background jobs with `&`
+- Background job output printing
+- Reaping completed jobs (single and multiple)
+- Reaping before the next prompt
+- Recycling job numbers
+**Pipelines**
+- Dual-command pipelines (`cmd1 | cmd2`)
+- Pipelines with builtins
+- Multi-command pipelines (`cmd1 | cmd2 | cmd3 | ...`)
+---
+ 
+### Not implemented
+ 
+- History (builtin, listing, limiting, arrow navigation, persistence)
+- Parameter Expansion (`declare`, shell variables, `$VAR` / `${VAR}` expansion)
