@@ -782,6 +782,10 @@ char** my_completion(const char* user_input, int start, int end) {
     return matches;
   } 
   if (g > 1) {
+    if (strlen(matches[0]) > strlen(user_input)) {
+      rl_completion_suppress_append = 0;
+      return matches;
+    }
     if (rl_last_func == rl_complete) {        // 2nd tab
       qsort(matches + 1, g - 1, sizeof(matches[0]), comp);
       return matches;  
